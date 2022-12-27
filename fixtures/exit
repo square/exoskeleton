@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# SUMMARY: Exits with the given code
+
+exit $1
