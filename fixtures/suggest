@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# SUMMARY: Suggests arguments
+
+if [[ "$1" == "--complete" ]]; then
+  echo "one
+two
+three
+:4"
+  exit 0
+fi
+
+echo "For testing --complete"
+exit 80

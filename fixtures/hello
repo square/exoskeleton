@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+for arg in "$@"; do
+  if [ "$arg" = "--summary" ]; then
+    echo 'Prints "hello"'
+    exit 0
+  fi
+done
+
+printf "hello"

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+# SUMMARY: Echoes the args it received
+
+for arg in "$@"; do
+  echo $arg
+done

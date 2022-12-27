@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# SUMMARY: Prints "hello"
+
+printf "hello"
