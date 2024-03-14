@@ -7,7 +7,7 @@ Exoskeleton is a library for creating modern multi-CLI applications whose comman
 
 ## Why Exoskeleton?
 
-Exoskeleton is similar to frameworks like [Cobra](cobra) and [Oclif](oclif) in that it simplifies building subcommand-based command line applications (like `git clone`, `git log`) by providing:
+Exoskeleton is similar to frameworks like [Cobra][cobra] and [Oclif][oclif] in that it simplifies building subcommand-based command line applications (like `git clone`, `git log`) by providing:
 - nested subcommands and automatically generated menus of subcommands
 - tab-completion for shells
 - suggestions for mistyped commands ("Did you mean ...?")
@@ -55,16 +55,16 @@ func main() {
 }
 ```
 
-① An exoskeleton is constructed with an array of paths to search for [subcommands](subcommands). ② It uses the arguments to identify which subcommand is being invoked. ③ The subcommand is executed ④ and the program exits (`0` if `err` is `nil`, `1` or a [semantic exit code][exit] otherwise).
+① An exoskeleton is constructed with an array of paths to search for [subcommands][subcommands]. ② It uses the arguments to identify which subcommand is being invoked. ③ The subcommand is executed ④ and the program exits (`0` if `err` is `nil`, `1` or a [semantic exit code][exit] otherwise).
 
-To see this in action, take a look at the [the Hello World example project](hello_world).
+To see this in action, take a look at the [the Hello World example project][hello_world].
 
-In the real world, a CLI might also:
-1. Customize the exoskeleton by passing [options](options) to `exoskeleton.New`
+In the real world, an application might also:
+1. Customize the exoskeleton by passing [options][options] to `exoskeleton.New`
 2. Add business logic between ② `Identify` and ③ `Exec` or ③ `Exec` and ④ `os.Exit`
 
 > [!TIP]
-> At Square, we use the [OnCommandNotFound](OnCommandNotFound) callback to install subcommands on-demand, check for updates after constructing the exoskeleton, and wrap `Exec` to emit usage metrics.
+> At Square, we use the [OnCommandNotFound][OnCommandNotFound] callback to install subcommands on-demand, check for updates after constructing the exoskeleton, and wrap `Exec` to emit usage metrics.
 
 # Subcommands
 
@@ -80,11 +80,11 @@ Subcommands can be either shell scripts or binaries.
 
 Compiled binaries should parse their arguments for the `--help` and `--summary` flags. They should do this early in execution before any expensive set up, write the text to standard out, and exit successfully.
 
-Shell scripts which start with the shebang (`#!`) may respond to `--help` and `--summary` flags or may choose to document themselves with magic comments (`# HELP: <help text follows>`, `# SUMMARY: <summary line follows>`). See [examples/hello_world/libexec/ls](ls) and [examples/hello_world/libexec/rm](rm) for examples.
+Shell scripts which start with the shebang (`#!`) may respond to `--help` and `--summary` flags or may choose to document themselves with magic comments (`# HELP: <help text follows>`, `# SUMMARY: <summary line follows>`). See [examples/hello_world/libexec/ls][ls] and [examples/hello_world/libexec/rm][rm] for examples.
 
 ### Completions
 
-Exoskeleton uses [shellcomp](shellcomp) (the API that Cobra developed) to separate shell-specific logic for implementing completions from the logic for producing the suggestions themselves.
+Exoskeleton uses [shellcomp][shellcomp] (the API that Cobra developed) to separate shell-specific logic for implementing completions from the logic for producing the suggestions themselves.
 
 Shellcomp scripts invoke exoskeleton with `--complete <WHATEVER THE USER TYPED>` and expect to receive a list of suggestions on standard output.
 
@@ -120,30 +120,31 @@ Shellcomp scripts invoke exoskeleton with `--complete <WHATEVER THE USER TYPED>`
 > ```
 > and, at this point, if `git checkout` handles `--complete`, it may list branches that start with `lail/`.
 
-See [shellcomp's docs](shellcomp) for implementing completions for a subcommand.
+See [shellcomp's docs][shellcomp] for implementing completions for a subcommand.
 
-Call [exoskeleton.GenerateCompletionScript](GenerateCompletionScript) to generate the shellcomp scripts for your project.
+Call [exoskeleton.GenerateCompletionScript][GenerateCompletionScript] to generate the shellcomp scripts for your project.
 
 > [!TIP]
 > At Square, we call this function in our `Makefile` and distribute artifacts for Bash and Zsh with releases.
 
 ## Menus
 
-In Exoskeleton, each subcommand maps to a separate, standalone executable. _Submenus_ map to directories. The directory must contain a file named `.exoskeleton` (this is [configurable](WithModuleMetadataFilename)).
+As each subcommand maps to a standalone executable, _submenus_ map to directories.
+1. The directory MUST contain a file named `.exoskeleton` (the file name is [configurable][WithModuleMetadataFilename]).
 
-Take a look at the `dir` module in [the Hello World example project](hello_world).
+Take a look at the `dir` module in [the Hello World example project][hello_world].
 
 
 [cobra]: https://github.com/spf13/cobra
-[exit]: https://github.com/square/exit
+[exit]: https://github.com/square/exit#the-codes
+[GenerateCompletionScript]: https://pkg.go.dev/github.com/square/exoskeleton#GenerateCompletionScript
 [hello_world]: https://github.com/square/exoskeleton/tree/main/examples/hello_world
 [ls]: https://github.com/square/exoskeleton/tree/main/examples/hello_world/libexec/ls
 [oclif]: https://oclif.io/
+[OnCommandNotFound]: https://pkg.go.dev/github.com/square/exoskeleton#OnCommandNotFound
 [options]: https://pkg.go.dev/github.com/square/exoskeleton#Option
 [rm]: https://github.com/square/exoskeleton/tree/main/examples/hello_world/libexec/rm
+[shellcomp]: https://github.com/square/exoskeleton/tree/main/pkg/shellcomp#readme
 [sub]: https://github.com/qrush/sub
 [subcommands]: #subcommands
-[GenerateCompletionScript]: https://pkg.go.dev/github.com/square/exoskeleton#GenerateCompletionScript
-[OnCommandNotFound]: https://pkg.go.dev/github.com/square/exoskeleton#OnCommandNotFound
 [WithModuleMetadataFilename]: https://pkg.go.dev/github.com/square/exoskeleton#WithModuleMetadataFilename
-[shellcomp]: https://github.com/square/exoskeleton/tree/main/pkg/shellcomp

@@ -2,9 +2,9 @@
 
 This project demonstrates a basic commandline application created with Exoskeleton.
 
-[hello.go](hello.go) constructs a CLI that will find its subcommands in the path `./libexec`.
+[hello.go][hello.go] constructs a CLI that will find its subcommands in the path `./libexec`.
 
-[libexec/dir/ls](ls) and [libexec/dir/rm](rm) are two Bash scripts that [can be picked up as subcommands](contract).
+[libexec/dir/ls][ls] and [libexec/dir/rm][rm] are two Bash scripts that [can be picked up as subcommands][contract].
 
 You can run the project like this:
 ```sh
@@ -53,7 +53,7 @@ DESCRIPTION
 ```
 (As does `hello dir ls -h` and `hello dir ls --help`)
 
-And `hello dir ls` runs [libexec/dir/ls](ls).
+And `hello dir ls` runs [libexec/dir/ls][ls].
 
 
 [hello.go]: https://github.com/square/exoskeleton/tree/main/examples/hello_world/hello.go
