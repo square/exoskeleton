@@ -48,7 +48,6 @@ func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
 
 	var filteredArgs []string
 	var willExpandMenu bool
-	var willIncludeModules bool
 
 	for i, arg := range args {
 		if arg == "--" {
@@ -56,18 +55,13 @@ func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
 			break
 		} else if arg == "--all" || arg == "-a" {
 			willExpandMenu = true
-		} else if arg == "--with-modules" {
-			willIncludeModules = true
 		} else {
 			filteredArgs = append(filteredArgs, arg)
 		}
 	}
 
 	if willExpandMenu {
-		cmds = cmds.Flatten()
-		if !willIncludeModules {
-			cmds = withoutModules(cmds)
-		}
+		cmds = withoutModules(cmds.Flatten())
 	}
 
 	printHelp(e.buildMenu(cmds, m).String())
