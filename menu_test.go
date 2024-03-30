@@ -13,7 +13,7 @@ import (
 
 func TestBuildMenuUsage(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
-	module := &module{executable: executable{parent: entrypoint, name: "module"}}
+	module := &directoryModule{executable: executable{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
 	assert.Equal(t, "entrypoint <command> [<args>]", entrypoint.buildMenu(entrypoint.cmds, entrypoint).Usage)
@@ -22,7 +22,7 @@ func TestBuildMenuUsage(t *testing.T) {
 
 func TestBuildMenuTrailer(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
-	module := &module{executable: executable{parent: entrypoint, name: "module"}}
+	module := &directoryModule{executable: executable{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
 	assert.Equal(t,

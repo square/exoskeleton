@@ -16,7 +16,7 @@ func TestCompletionsFor(t *testing.T) {
 	//     └── unlock
 	entrypoint := &Entrypoint{}
 	echo := &builtinCommand{parent: entrypoint, name: "echo", complete: echoArgs}
-	sfoils := &module{executable: executable{parent: entrypoint, name: "s-foils"}}
+	sfoils := &directoryModule{executable: executable{parent: entrypoint, name: "s-foils"}}
 	lock := &executable{parent: sfoils, name: "lock"}
 	unlock := &executable{parent: sfoils, name: "unlock"}
 	sfoils.cmds = Commands{lock, unlock}

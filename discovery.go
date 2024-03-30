@@ -52,7 +52,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 			// Don't search directories that exceed the configured maxDepth
 			// or that don't contain the configured modulefile.
 			if (d.maxDepth == -1 || d.depth < d.maxDepth) && exists(modulefilePath) {
-				*all = append(*all, &module{
+				*all = append(*all, &directoryModule{
 					executable: executable{
 						parent:       parent,
 						path:         modulefilePath,

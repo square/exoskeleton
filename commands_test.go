@@ -20,9 +20,9 @@ func TestFind(t *testing.T) {
 
 func TestFlatten(t *testing.T) {
 	a := &executable{name: "a"}
-	b := &module{executable: executable{name: "b"}}
+	b := &directoryModule{executable: executable{name: "b"}}
 	c := &executable{parent: b, name: "c"}
-	d := &module{executable: executable{parent: b, name: "d"}}
+	d := &directoryModule{executable: executable{parent: b, name: "d"}}
 	e := &executable{parent: d, name: "e"}
 	b.cmds = Commands{c, d}
 	d.cmds = Commands{e}
