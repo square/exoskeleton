@@ -7,10 +7,11 @@ import (
 	"strings"
 )
 
-func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
+// MenuRelativeTo constructs a menu of Commands with usage strings relative to a given Module.
+func (e *Entrypoint) MenuRelativeTo(c Commands, m Module) Menu {
 	usage := Usage(m) + " <command> [<args>]"
 
-	var items menuItems
+	var items MenuItems
 
 	seen := make(map[string]bool)
 	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
@@ -31,13 +32,13 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 			e.onError(err)
 		} else if summary != "" {
 			heading := e.menuHeadingFor(m, cmd)
-			items = append(items, &menuItem{Name: name, Summary: summary, Heading: heading})
+			items = append(items, &MenuItem{Name: name, Summary: summary, Heading: heading})
 		}
 	}
 
 	width := items.MaxWidth()
 
-	byHeading := make(map[string]menuItems)
+	byHeading := make(map[string]MenuItems)
 	var orderedHeadings []string
 	for _, menuItem := range items {
 		menuItem.Width = width
@@ -47,12 +48,12 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 		byHeading[menuItem.Heading] = append(byHeading[menuItem.Heading], menuItem)
 	}
 
-	var sections menuSections
+	var sections MenuSections
 	for _, heading := range orderedHeadings {
 		menuItems := byHeading[heading]
 		if len(menuItems) > 0 {
 			sort.Sort(menuItems)
-			sections = append(sections, menuSection{heading, menuItems})
+			sections = append(sections, MenuSection{heading, menuItems})
 		}
 	}
 
@@ -62,22 +63,22 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 		strings.TrimLeft(UsageRelativeTo(m, e)+" <command>", " "),
 	)
 
-	return menu{Usage: usage, Sections: sections, Trailer: trailer}
+	return Menu{Usage: usage, Sections: sections, Trailer: trailer}
 }
 
-type menu struct {
+type Menu struct {
 	Usage    string
-	Sections menuSections
+	Sections MenuSections
 	Trailer  string
 }
 
-func (m menu) String() string {
+func (m Menu) String() string {
 	return fmt.Sprintf("USAGE\n   %s\n\n%s\n\n%s", m.Usage, m.Sections, m.Trailer)
 }
 
-type menuSections []menuSection
+type MenuSections []MenuSection
 
-func (m menuSections) String() string {
+func (m MenuSections) String() string {
 	var s []string
 	for _, section := range m {
 		s = append(s, section.String())
@@ -85,23 +86,23 @@ func (m menuSections) String() string {
 	return strings.Join(s, "\n\n")
 }
 
-type menuSection struct {
+type MenuSection struct {
 	Heading   string
-	MenuItems menuItems
+	MenuItems MenuItems
 }
 
-func (section menuSection) String() string {
+func (section MenuSection) String() string {
 	return fmt.Sprintf("\033[1m%s\033[0m\n   %s", section.Heading, section.MenuItems)
 }
 
-type menuItems []*menuItem
+type MenuItems []*MenuItem
 
 // Implement sort.Interface so that MenuItems can be sorted by Name
-func (m menuItems) Len() int           { return len(m) }
-func (m menuItems) Less(i, j int) bool { return m[i].Name < m[j].Name }
-func (m menuItems) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+func (m MenuItems) Len() int           { return len(m) }
+func (m MenuItems) Less(i, j int) bool { return m[i].Name < m[j].Name }
+func (m MenuItems) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 
-func (m menuItems) MaxWidth() (longestCommand int) {
+func (m MenuItems) MaxWidth() (longestCommand int) {
 	for _, menuItem := range m {
 		if len(menuItem.Name) > longestCommand {
 			longestCommand = len(menuItem.Name)
@@ -110,7 +111,7 @@ func (m menuItems) MaxWidth() (longestCommand int) {
 	return
 }
 
-func (m menuItems) String() string {
+func (m MenuItems) String() string {
 	var s []string
 	for _, mi := range m {
 		s = append(s, mi.String())
@@ -118,13 +119,13 @@ func (m menuItems) String() string {
 	return strings.Join(s, "\n   ")
 }
 
-type menuItem struct {
+type MenuItem struct {
 	Name    string
 	Summary string
 	Heading string
 	Width   int
 }
 
-func (mi *menuItem) String() string {
+func (mi *MenuItem) String() string {
 	return fmt.Sprintf("%*s  %s", -mi.Width, mi.Name, mi.Summary)
 }
