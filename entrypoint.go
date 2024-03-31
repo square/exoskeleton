@@ -60,27 +60,29 @@ func New(paths []string, options ...Option) (*Entrypoint, error) {
 
 	options =
 		append(
-			options,
-			PrependCommands(
-				&EmbeddedCommand{
-					Name:     "help",
-					Help:     fmt.Sprintf(self.helpHelp, self.Name()),
-					Exec:     helpExec,
-					Complete: CompleteCommands,
-				},
-				&EmbeddedCommand{
-					Name:     "which",
-					Help:     fmt.Sprintf(self.whichHelp, self.Name()),
-					Exec:     whichExec,
-					Complete: CompleteCommands,
-				},
-				&EmbeddedCommand{
-					Name:     "complete",
-					Help:     fmt.Sprintf(self.completeHelp, self.Name()),
-					Exec:     completeExec,
-					Complete: nil,
-				},
-			),
+			[]Option{
+				PrependCommands(
+					&EmbeddedCommand{
+						Name:     "help",
+						Help:     fmt.Sprintf(self.helpHelp, self.Name()),
+						Exec:     helpExec,
+						Complete: CompleteCommands,
+					},
+					&EmbeddedCommand{
+						Name:     "which",
+						Help:     fmt.Sprintf(self.whichHelp, self.Name()),
+						Exec:     whichExec,
+						Complete: CompleteCommands,
+					},
+					&EmbeddedCommand{
+						Name:     "complete",
+						Help:     fmt.Sprintf(self.completeHelp, self.Name()),
+						Exec:     completeExec,
+						Complete: nil,
+					},
+				),
+			},
+			options...,
 		)
 
 	for _, op := range options {
