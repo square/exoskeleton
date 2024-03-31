@@ -1,5 +1,7 @@
 package exoskeleton
 
+import "github.com/square/exoskeleton/pkg/shellcomp"
+
 // An Option applies optional changes to an Exoskeleton Entrypoint.
 type Option interface {
 	Apply(*Entrypoint)
@@ -8,27 +10,53 @@ type Option interface {
 // optionFunc is a function that adheres to the Option interface.
 type optionFunc func(*Entrypoint)
 
+// ExecFunc is called when an built-in command is run.
+type ExecFunc func(e *Entrypoint, args, env []string) error
+
+// CompleteFunc is called when an built-in command is asked to supply shell completions.
+type CompleteFunc func(e *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error)
+
+// EmbeddedCommand defines a built-in command that can be added to an Entrypoint
+// (as opposed to an executable external to the Entrypoint).
+type EmbeddedCommand struct {
+	Name     string
+	Summary  string
+	Help     string
+	Exec     ExecFunc
+	Complete CompleteFunc
+}
+
 // Apply invokes the optionFunc with the given Entrypoint.
 func (fn optionFunc) Apply(e *Entrypoint) {
 	fn(e)
 }
 
-// AppendCommand adds a new built-in command to the Entrypoint. The command is added to
+// AppendCommands adds new embedded commands to the Entrypoint. The commands are added to
 // the end of the list and will have the lowest precedence: an executable with the same name
-// would override it.
-func AppendCommand(name, summary, help string, exec ExecFunc, complete CompleteFunc) Option {
+// as one of these commands would override it.
+func AppendCommands(cmds ...*EmbeddedCommand) Option {
 	return (optionFunc)(func(e *Entrypoint) {
-		e.cmdsToAppend = append(e.cmdsToAppend, &builtinCommand{e, name, summary, help, exec, complete})
+		e.cmdsToAppend = append(e.cmdsToAppend, buildCommands(e, cmds)...)
 	})
 }
 
-// PrependCommand adds a new built-in command to the Entrypoint. The command is added to
+// PrependCommands adds new embedded commands to the Entrypoint. The command are added to
 // the front of the list and will have the highest precedence: an executable with the same name
-// would be overridden by it.
-func PrependCommand(name, summary, help string, exec ExecFunc, complete CompleteFunc) Option {
+// as one of these commands would be overridden by it.
+func PrependCommands(cmds ...*EmbeddedCommand) Option {
 	return (optionFunc)(func(e *Entrypoint) {
-		e.cmdsToPrepend = append([]Command{&builtinCommand{e, name, summary, help, exec, complete}}, e.cmdsToPrepend...)
+		e.cmdsToPrepend = append(buildCommands(e, cmds), e.cmdsToPrepend...)
 	})
+}
+
+func buildCommands(m Module, cmds []*EmbeddedCommand) []Command {
+	var result []Command
+
+	for _, cmd := range cmds {
+		result = append(result, &builtinCommand{m, cmd})
+	}
+
+	return result
 }
 
 // OnError registers a callback (ErrorFunc) to be invoked when a nonfatal error occurs.

@@ -43,7 +43,7 @@ func TestIdentify(t *testing.T) {
 	// Should never be returned because `a` precedes it.
 	overloaded_a := &executableCommand{name: "a"}
 
-	help := &builtinCommand{name: `help`}
+	help := &builtinCommand{definition: &EmbeddedCommand{Name: `help`}}
 	entrypoint := &Entrypoint{cmds: Commands{help, a, b, overloaded_a}}
 
 	scenarios := []struct {
