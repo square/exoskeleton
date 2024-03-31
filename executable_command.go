@@ -13,21 +13,21 @@ import (
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
 
-// executable implements the Command interface for a file that can be executed.
-type executable struct {
+// executableCommand implements the Command interface for a file that can be executed.
+type executableCommand struct {
 	parent       Module
 	path         string
 	name         string
 	discoveredIn string
 }
 
-func (cmd *executable) Parent() Module       { return cmd.parent }
-func (cmd *executable) Path() string         { return cmd.path }
-func (cmd *executable) Name() string         { return cmd.name }
-func (cmd *executable) DiscoveredIn() string { return cmd.discoveredIn }
+func (cmd *executableCommand) Parent() Module       { return cmd.parent }
+func (cmd *executableCommand) Path() string         { return cmd.path }
+func (cmd *executableCommand) Name() string         { return cmd.name }
+func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
 
 // Exec invokes the executable with the given arguments and environment.
-func (cmd *executable) Exec(_ *Entrypoint, args, env []string) error {
+func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 	command := exec.Command(cmd.path, args...)
 	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
@@ -49,7 +49,7 @@ func (cmd *executable) Exec(_ *Entrypoint, args, env []string) error {
 
 // Complete invokes the executable with `--complete` as its first argument
 // and parses its output according to Cobra's ShellComp API.
-func (cmd *executable) Complete(_ *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error) {
+func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error) {
 	command := exec.Command(cmd.path, append([]string{"--complete", "--"}, args...)...)
 	command.Stdin = nil
 	command.Stderr = nil
@@ -71,7 +71,7 @@ func (cmd *executable) Complete(_ *Entrypoint, args, env []string) ([]string, sh
 // When Command is a binary, it executes the command with the flag '--summary'.
 // The executable is expected to write the summary to standard output and exit
 // successfully.
-func (cmd *executable) Summary() (string, error) {
+func (cmd *executableCommand) Summary() (string, error) {
 	return getMessageFromCommand(cmd, "summary")
 }
 
@@ -83,7 +83,7 @@ func (cmd *executable) Summary() (string, error) {
 // When Command is a binary, it executes the command with the flag '--help'.
 // The executable is expected to write the help text to standard output and exit
 // successfully.
-func (cmd *executable) Help() (string, error) {
+func (cmd *executableCommand) Help() (string, error) {
 	return getMessageFromCommand(cmd, "help")
 }
 
@@ -116,7 +116,7 @@ const (
 	unknown
 )
 
-func getMessageFromCommand(cmd *executable, message string) (string, error) {
+func getMessageFromCommand(cmd *executableCommand, message string) (string, error) {
 	f, err := os.Open(cmd.path)
 	if err != nil {
 		return "", err

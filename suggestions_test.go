@@ -9,11 +9,11 @@ import (
 
 func TestSuggestionsFor(t *testing.T) {
 	entrypoint := &Entrypoint{name: "e"}
-	spec := &directoryModule{executable: executable{parent: entrypoint, name: "spec"}}
-	echoargs := &executable{parent: spec, name: "echoargs"}
+	spec := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "spec"}}
+	echoargs := &executableCommand{parent: spec, name: "echoargs"}
 	spec.cmds = Commands{echoargs}
 	// Should never be returned because `spec` precedes it.
-	overloaded_spec := &executable{parent: entrypoint, name: "spec"}
+	overloaded_spec := &executableCommand{parent: entrypoint, name: "spec"}
 	entrypoint.cmds = Commands{spec, overloaded_spec}
 
 	scenarios := []struct {

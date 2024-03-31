@@ -8,7 +8,7 @@ import (
 )
 
 type directoryModule struct {
-	executable
+	executableCommand
 	cmds       Commands
 	discoverer *discoverer
 }

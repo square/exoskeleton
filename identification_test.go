@@ -32,16 +32,16 @@ func TestIdentify(t *testing.T) {
 	//     ├── c
 	//     └── d
 	//         └── e
-	a := &executable{name: "a"}
-	b := &directoryModule{executable: executable{name: "b"}}
-	c := &executable{parent: b, name: "c"}
-	d := &directoryModule{executable: executable{parent: b, name: "d"}}
-	e := &executable{parent: d, name: "e"}
+	a := &executableCommand{name: "a"}
+	b := &directoryModule{executableCommand: executableCommand{name: "b"}}
+	c := &executableCommand{parent: b, name: "c"}
+	d := &directoryModule{executableCommand: executableCommand{parent: b, name: "d"}}
+	e := &executableCommand{parent: d, name: "e"}
 	b.cmds = Commands{c, d}
 	d.cmds = Commands{e}
 
 	// Should never be returned because `a` precedes it.
-	overloaded_a := &executable{name: "a"}
+	overloaded_a := &executableCommand{name: "a"}
 
 	help := &builtinCommand{name: `help`}
 	entrypoint := &Entrypoint{cmds: Commands{help, a, b, overloaded_a}}

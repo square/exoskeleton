@@ -53,7 +53,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 			// or that don't contain the configured modulefile.
 			if (d.maxDepth == -1 || d.depth < d.maxDepth) && exists(modulefilePath) {
 				*all = append(*all, &directoryModule{
-					executable: executable{
+					executableCommand: executableCommand{
 						parent:       parent,
 						path:         modulefilePath,
 						name:         name,
@@ -71,7 +71,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 		} else if ok, err := isExecutable(file); err != nil {
 			d.onError(DiscoveryError{Cause: err, Path: p})
 		} else if ok {
-			*all = append(*all, &executable{
+			*all = append(*all, &executableCommand{
 				parent:       parent,
 				path:         path.Join(p, name),
 				name:         name,
