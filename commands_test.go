@@ -7,10 +7,10 @@ import (
 )
 
 func TestFind(t *testing.T) {
-	a := &executable{name: "a"}
-	b := &executable{name: "b"}
+	a := &executableCommand{name: "a"}
+	b := &executableCommand{name: "b"}
 	// Should never be returned because `a` precedes it.
-	overloaded_a := &executable{name: "a"}
+	overloaded_a := &executableCommand{name: "a"}
 	cmds := Commands{a, b, overloaded_a}
 
 	assert.Equal(t, a, cmds.Find("a"))
@@ -19,11 +19,11 @@ func TestFind(t *testing.T) {
 }
 
 func TestFlatten(t *testing.T) {
-	a := &executable{name: "a"}
-	b := &module{executable: executable{name: "b"}}
-	c := &executable{parent: b, name: "c"}
-	d := &module{executable: executable{parent: b, name: "d"}}
-	e := &executable{parent: d, name: "e"}
+	a := &executableCommand{name: "a"}
+	b := &directoryModule{executableCommand: executableCommand{name: "b"}}
+	c := &executableCommand{parent: b, name: "c"}
+	d := &directoryModule{executableCommand: executableCommand{parent: b, name: "d"}}
+	e := &executableCommand{parent: d, name: "e"}
 	b.cmds = Commands{c, d}
 	d.cmds = Commands{e}
 

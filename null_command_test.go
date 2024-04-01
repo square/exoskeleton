@@ -8,6 +8,6 @@ import (
 
 func TestIsNull(t *testing.T) {
 	assert.True(t, IsNull(nullCommand{}))
-	assert.False(t, IsNull(&executable{}))
+	assert.False(t, IsNull(&executableCommand{}))
 	assert.False(t, IsNull(&builtinCommand{}))
 }
