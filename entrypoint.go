@@ -9,10 +9,10 @@ import (
 )
 
 // CommandNotFoundFunc is a function that accepts a Null Command object. It is called when a command is not found.
-type CommandNotFoundFunc func(Command)
+type CommandNotFoundFunc func(*Entrypoint, Command)
 
 // ErrorFunc is called when an error occurs.
-type ErrorFunc func(error)
+type ErrorFunc func(*Entrypoint, error)
 
 // MenuHeadingForFunc is a function that is expected to return the heading
 // under which a command should be listed when it is printed in a menu.
@@ -124,13 +124,13 @@ func newWithDefaults(path string) *Entrypoint {
 
 func (e *Entrypoint) onError(err error) {
 	for _, callback := range e.errorCallbacks {
-		callback(err)
+		callback(e, err)
 	}
 }
 
 func (e *Entrypoint) commandNotFound(cmd nullCommand) {
 	for _, callback := range e.commandNotFoundCallbacks {
-		callback(cmd)
+		callback(e, cmd)
 	}
 
 	usage := UsageRelativeTo(cmd, e)
