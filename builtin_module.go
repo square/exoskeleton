@@ -5,11 +5,13 @@ import (
 )
 
 type builtinModule struct {
+	entrypoint  *Entrypoint
 	parent      Module
 	definition  *EmbeddedModule
 	subcommands Commands
 }
 
+func (m *builtinModule) Entrypoint() *Entrypoint  { return m.entrypoint }
 func (m *builtinModule) Parent() Module           { return m.parent }
 func (m *builtinModule) Path() string             { return m.parent.Path() }
 func (m *builtinModule) Name() string             { return m.definition.Name }

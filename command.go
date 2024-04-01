@@ -28,6 +28,9 @@ type Command interface {
 	// would be the entrypoint itself, 'go'.
 	Parent() Module
 
+	// Entrypoint returns a reference to the Entrypoint that contains the command.
+	Entrypoint() *Entrypoint
+
 	// Exec executes the command.
 	Exec(e *Entrypoint, args, env []string) error
 

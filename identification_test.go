@@ -52,7 +52,7 @@ func TestIdentify(t *testing.T) {
 		expectedArgs []string
 	}{
 		{[]string{}, entrypoint, []string{}},
-		{[]string{"x"}, nullCommand{entrypoint, "x"}, []string{}},
+		{[]string{"x"}, nullCommand{entrypoint, entrypoint, "x"}, []string{}},
 
 		// Can invoke a command (with or without args)
 		{[]string{"a"}, a, []string{}},
@@ -73,10 +73,10 @@ func TestIdentify(t *testing.T) {
 		// Can invoke a module with flags but not with positional args
 		{[]string{"b"}, b, []string{}},
 		{[]string{"b", "--flag"}, b, []string{"--flag"}},
-		{[]string{"b", "x", "--flag"}, nullCommand{b, "x"}, []string{"--flag"}},
+		{[]string{"b", "x", "--flag"}, nullCommand{entrypoint, b, "x"}, []string{"--flag"}},
 		{[]string{"b", "d"}, d, []string{}},
 		{[]string{"b", "d", "--flag"}, d, []string{"--flag"}},
-		{[]string{"b", "d", "x", "--flag"}, nullCommand{d, "x"}, []string{"--flag"}},
+		{[]string{"b", "d", "x", "--flag"}, nullCommand{entrypoint, d, "x"}, []string{"--flag"}},
 
 		// Can invoke a module with a trailing colon
 		{[]string{"b:"}, b, []string{}},

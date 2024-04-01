@@ -57,16 +57,16 @@ func PrependCommands(cmds ...interface{}) Option {
 	})
 }
 
-func buildCommands(m Module, cmds []interface{}) []Command {
+func buildCommands(e *Entrypoint, cmds []interface{}) []Command {
 	var result []Command
 
 	for _, cmd := range cmds {
 		switch v := cmd.(type) {
 		case *EmbeddedCommand:
-			result = append(result, &builtinCommand{m, v})
+			result = append(result, &builtinCommand{e, e, v})
 		case *EmbeddedModule:
-			module := &builtinModule{m, v, nil}
-			module.subcommands = buildCommands(module, v.Commands)
+			module := &builtinModule{e, e, v, nil}
+			module.subcommands = buildCommands(e, v.Commands)
 			result = append(result, module)
 		default:
 			panic("Invalid command type")

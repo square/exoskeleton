@@ -12,7 +12,7 @@ import "strings"
 // If no command is identified, Identify invokes CommandNotFound callbacks and
 // returns NullCommand.
 func (e *Entrypoint) Identify(rawArgs []string) (Command, []string) {
-	cmd, args := identify(e, normalizeArgs(rawArgs))
+	cmd, args := e.identify(e, normalizeArgs(rawArgs))
 
 	if n, ok := cmd.(nullCommand); ok {
 		e.commandNotFound(n)
@@ -23,7 +23,7 @@ func (e *Entrypoint) Identify(rawArgs []string) (Command, []string) {
 
 // Identify uses args to identify a Command and returns the command and the rest
 // of the commandline arguments or else {nil, args} if no Command is identified.
-func identify(m Module, args []string) (Command, []string) {
+func (e *Entrypoint) identify(m Module, args []string) (Command, []string) {
 	if len(args) == 0 || isFlag(args[0]) {
 		return m, args
 	}
@@ -32,13 +32,13 @@ func identify(m Module, args []string) (Command, []string) {
 	// Do this just-in-time, non-destructively, while we're working on identifying a command.
 	name, rest := args[0], args[1:]
 	if strings.Contains(name, ":") {
-		return identify(m, append(without(strings.Split(name, ":"), ""), rest...))
+		return e.identify(m, append(without(strings.Split(name, ":"), ""), rest...))
 	}
 
 	if cmd := m.Subcommands().Find(name); cmd == nil {
-		return nullCommand{parent: m, name: name}, rest
+		return nullCommand{entrypoint: e, parent: m, name: name}, rest
 	} else if submodule, ok := cmd.(Module); ok {
-		return identify(submodule, rest)
+		return e.identify(submodule, rest)
 	} else {
 		return cmd, rest
 	}

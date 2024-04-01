@@ -5,10 +5,12 @@ import (
 )
 
 type builtinCommand struct {
+	entrypoint *Entrypoint
 	parent     Module
 	definition *EmbeddedCommand
 }
 
+func (c *builtinCommand) Entrypoint() *Entrypoint  { return c.entrypoint }
 func (c *builtinCommand) Parent() Module           { return c.parent }
 func (c *builtinCommand) Path() string             { return c.parent.Path() }
 func (c *builtinCommand) Name() string             { return c.definition.Name }

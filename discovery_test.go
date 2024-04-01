@@ -75,7 +75,7 @@ func TestDiscoverIn(t *testing.T) {
 
 	for _, s := range scenarios {
 		var cmds Commands
-		d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: s.maxDepth}
+		d := discoverer{entrypoint: &Entrypoint{moduleMetadataFilename: ".exoskeleton", maxDepth: s.maxDepth}}
 		d.discoverIn(fixtures, nil, &cmds)
 
 		var names []string
@@ -88,7 +88,7 @@ func TestDiscoverIn(t *testing.T) {
 }
 func TestFollowingSymlinks(t *testing.T) {
 	var cmds Commands
-	d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: 1}
+	d := discoverer{entrypoint: &Entrypoint{moduleMetadataFilename: ".exoskeleton", maxDepth: 1}}
 	d.discoverIn(fixtures, nil, &cmds)
 
 	cmd := cmds.Find("symlink-test").(Module).Subcommands().Find("hello-prime")

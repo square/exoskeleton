@@ -8,18 +8,12 @@ import (
 )
 
 type discoverer struct {
-	maxDepth   int
+	entrypoint *Entrypoint
 	depth      int
-	onError    ErrorFunc
-	modulefile string
 }
 
 func (e *Entrypoint) discoverIn(paths []string) (all Commands) {
-	d := &discoverer{
-		onError:    e.onError,
-		modulefile: e.moduleMetadataFilename,
-		maxDepth:   e.maxDepth,
-	}
+	d := &discoverer{entrypoint: e}
 	for _, path := range paths {
 		d.discoverIn(path, e, &all)
 	}
@@ -47,23 +41,22 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 		}
 
 		if file.IsDir() {
-			modulefilePath := path.Join(p, name, d.modulefile)
+			modulefilePath := path.Join(p, name, d.entrypoint.moduleMetadataFilename)
 
 			// Don't search directories that exceed the configured maxDepth
 			// or that don't contain the configured modulefile.
-			if (d.maxDepth == -1 || d.depth < d.maxDepth) && exists(modulefilePath) {
+			if (d.entrypoint.maxDepth == -1 || d.depth < d.entrypoint.maxDepth) && exists(modulefilePath) {
 				*all = append(*all, &directoryModule{
 					executableCommand: executableCommand{
+						entrypoint:   d.entrypoint,
 						parent:       parent,
 						path:         modulefilePath,
 						name:         name,
 						discoveredIn: p,
 					},
 					discoverer: &discoverer{
-						maxDepth:   d.maxDepth,
+						entrypoint: d.entrypoint,
 						depth:      d.depth + 1,
-						onError:    d.onError,
-						modulefile: d.modulefile,
 					},
 				})
 			}
@@ -72,6 +65,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 			d.onError(DiscoveryError{Cause: err, Path: p})
 		} else if ok {
 			*all = append(*all, &executableCommand{
+				entrypoint:   d.entrypoint,
 				parent:       parent,
 				path:         path.Join(p, name),
 				name:         name,
@@ -79,6 +73,10 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 			})
 		}
 	}
+}
+
+func (d *discoverer) onError(err error) {
+	d.entrypoint.onError(err)
 }
 
 func followSymlinks(path string) (fs.DirEntry, error) {

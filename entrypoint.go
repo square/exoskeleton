@@ -40,6 +40,7 @@ type Entrypoint struct {
 	cmdsToPrepend            []Command
 }
 
+func (e *Entrypoint) Entrypoint() *Entrypoint  { return e }
 func (e *Entrypoint) Parent() Module           { return nil }
 func (e *Entrypoint) Path() string             { return e.path }
 func (e *Entrypoint) Name() string             { return e.name }

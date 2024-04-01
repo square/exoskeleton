@@ -15,16 +15,18 @@ import (
 
 // executableCommand implements the Command interface for a file that can be executed.
 type executableCommand struct {
+	entrypoint   *Entrypoint
 	parent       Module
 	path         string
 	name         string
 	discoveredIn string
 }
 
-func (cmd *executableCommand) Parent() Module       { return cmd.parent }
-func (cmd *executableCommand) Path() string         { return cmd.path }
-func (cmd *executableCommand) Name() string         { return cmd.name }
-func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
+func (cmd *executableCommand) Entrypoint() *Entrypoint { return cmd.entrypoint }
+func (cmd *executableCommand) Parent() Module          { return cmd.parent }
+func (cmd *executableCommand) Path() string            { return cmd.path }
+func (cmd *executableCommand) Name() string            { return cmd.name }
+func (cmd *executableCommand) DiscoveredIn() string    { return cmd.discoveredIn }
 
 // Exec invokes the executable with the given arguments and environment.
 func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {

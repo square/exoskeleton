@@ -7,10 +7,12 @@ import (
 
 // nullCommand represents an unrecognized Command.
 type nullCommand struct {
-	parent Module
-	name   string
+	entrypoint *Entrypoint
+	parent     Module
+	name       string
 }
 
+func (n nullCommand) Entrypoint() *Entrypoint  { return n.entrypoint }
 func (n nullCommand) Parent() Module           { return n.parent }
 func (_ nullCommand) Path() string             { return "" }
 func (n nullCommand) Name() string             { return n.name }
