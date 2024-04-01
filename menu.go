@@ -140,7 +140,7 @@ func (mi *menuItem) String() string {
 type summaryCache struct {
 	Path    string
 	data    *cache
-	onError ErrorFunc
+	onError func(error)
 }
 
 type cache struct {

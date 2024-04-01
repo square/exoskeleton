@@ -10,7 +10,7 @@ import (
 type discoverer struct {
 	maxDepth   int
 	depth      int
-	onError    ErrorFunc
+	onError    func(error)
 	modulefile string
 }
 
