@@ -26,10 +26,3 @@ func (c *builtinCommand) Complete(e *Entrypoint, args, env []string) ([]string, 
 		return []string{}, shellcomp.DirectiveNoFileComp, nil
 	}
 }
-
-// IsEmbedded returns true if the given Command is built into the exoskeleton.
-func IsEmbedded(command Command) bool {
-	_, isCmd := command.(*builtinCommand)
-	_, isMod := command.(*builtinModule)
-	return isCmd || isMod
-}

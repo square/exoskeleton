@@ -25,9 +25,3 @@ func (_ nullCommand) Complete(_ *Entrypoint, _, _ []string) ([]string, shellcomp
 	// Unable to find the real command. E.g., <program> someInvalidCmd <TAB>
 	return nil, shellcomp.DirectiveNoFileComp, nil
 }
-
-// IsNull returns true if the given Command is a NullCommand and false if it is not.
-func IsNull(command Command) bool {
-	_, ok := command.(nullCommand)
-	return ok
-}
