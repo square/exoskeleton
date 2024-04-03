@@ -13,6 +13,11 @@ func CompleteCommands(e *Entrypoint, args, env []string) ([]string, shellcomp.Di
 	return e.completionsFor(args, env, false)
 }
 
+// CompleteFiles is a CompleteFunc that provides completions for files and paths.
+func CompleteFiles(e *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error) {
+	return nil, shellcomp.DirectiveDefault, nil
+}
+
 func (e *Entrypoint) completionsFor(args, env []string, completeArgs bool) ([]string, shellcomp.Directive, error) {
 	if len(args) == 0 {
 		return nil, shellcomp.DirectiveNoFileComp, nil
