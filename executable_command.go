@@ -214,10 +214,10 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 
 func getMessageFromExecution(path string, flag string) (string, error) {
 	cmd := exec.Command(path, "--"+flag)
-	out, err := cmd.CombinedOutput()
+	cmd.Stderr = nil
+	out, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("failed to execute %s: %v", path, err)
+		err = fmt.Errorf("failed to execute %s: %w", path, err)
 	}
-
-	return strings.TrimSuffix(string(out), "\n"), nil
+	return strings.TrimSuffix(string(out), "\n"), err
 }

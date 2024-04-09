@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+for arg in "$@"; do
+  if [ "$arg" = "--summary" ]; then
+    echo 'err' >&2
+    echo 'out'
+    exit 1
+  fi
+done
+
+printf "hello"
