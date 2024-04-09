@@ -120,7 +120,7 @@ func Marshal(completions []string, directive Directive, noDescriptions bool) (re
 }
 
 func Unmarshal(bytes []byte) ([]string, Directive, error) {
-	lines := strings.Split(strings.TrimSuffix(string(bytes), "\n"), "\n")
+	lines := strings.Split(strings.TrimRight(string(bytes), "\n"), "\n")
 
 	directiveString := strings.TrimPrefix(lines[len(lines)-1], ":") // ":4"
 	completions := lines[:len(lines)-1]
