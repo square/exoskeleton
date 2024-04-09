@@ -9,8 +9,8 @@ import (
 )
 
 func TestGetMessageFromExecutionHandlesErrors(t *testing.T) {
-	path := filepath.Join(fixtures, "edge-cases", "summary-fail")
-	summary, err := getMessageFromExecution(path, "summary")
+	cmd := &executableCommand{path: filepath.Join(fixtures, "edge-cases", "summary-fail")}
+	summary, err := cmd.getMessageFromExecution("summary")
 
 	var ee *exec.ExitError
 
@@ -20,8 +20,8 @@ func TestGetMessageFromExecutionHandlesErrors(t *testing.T) {
 }
 
 func TestGetMessageFromExecutionTrimsLineBreaks(t *testing.T) {
-	path := filepath.Join(fixtures, "edge-cases", "summary-with-newlines")
-	summary, err := getMessageFromExecution(path, "summary")
+	cmd := &executableCommand{path: filepath.Join(fixtures, "edge-cases", "summary-with-newlines")}
+	summary, err := cmd.getMessageFromExecution("summary")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "out", summary)
