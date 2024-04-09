@@ -1,10 +1,14 @@
 package exoskeleton
 
 import (
+	"encoding/json"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+const executableModuleExtension = ".exoskeleton"
 
 type discoverer struct {
 	maxDepth   int
@@ -89,13 +93,78 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 			return nil, nil
 		}
 
-		return &executableCommand{
+		executable := &executableCommand{
 			parent:       parent,
 			path:         path,
-			name:         name,
+			name:         strings.TrimSuffix(name, executableModuleExtension),
 			discoveredIn: discoveredIn,
-		}, nil
+		}
+
+		// if the executable has the extension ".exoskeleton" then we should treat it as a module.
+		if filepath.Ext(name) == executableModuleExtension && (d.maxDepth == -1 || d.depth < d.maxDepth) {
+			// Execute this command with the `--describe-commands` flag to get the subcommands
+			if module, err := d.discoverSubcommands(executable); err != nil {
+				return nil, DiscoveryError{Cause: err, Path: path}
+			} else {
+				return module, nil
+			}
+		}
+
+		return executable, nil
 	}
+}
+
+type commandDescriptor struct {
+	Name     string               `json:"name"`
+	Summary  string               `json:"summary"`
+	Commands []*commandDescriptor `json:"commands,omitempty"`
+}
+
+// discoverSubcommands invokes an executable with `--describe-commands` and constructs
+// a tree of modules and subcommands (all to be invoked through the given executable)
+// from the JSON output.
+func (d *discoverer) discoverSubcommands(executable *executableCommand) (Command, error) {
+	cmd := executable.Command("--describe-commands")
+	cmd.Stderr = nil
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	var descriptor *commandDescriptor
+	if err := json.Unmarshal(output, &descriptor); err != nil {
+		return nil, err
+	}
+
+	executable.name = descriptor.Name
+	executable.summary = descriptor.Summary
+	m := &executableModule{executableCommand: *executable}
+	m.cmds = d.toCommands(m, descriptor.Commands, nil)
+	return m, nil
+}
+
+func (d *discoverer) toCommands(parent *executableModule, descriptors []*commandDescriptor, args []string) Commands {
+	var cmds Commands
+	for _, descriptor := range descriptors {
+		c := &executableCommand{
+			parent:       parent,
+			discoveredIn: parent.discoveredIn,
+			path:         parent.path,
+			args:         append(args, descriptor.Name),
+			name:         descriptor.Name,
+			summary:      descriptor.Summary,
+		}
+
+		depth := d.depth + len(args) + 1
+		if len(descriptor.Commands) > 0 && (d.maxDepth == -1 || depth < d.maxDepth) {
+			m := &executableModule{executableCommand: *c}
+			m.cmds = d.toCommands(m, descriptor.Commands, append(args, m.name))
+			cmds = append(cmds, m)
+		} else {
+			cmds = append(cmds, c)
+		}
+	}
+	return cmds
 }
 
 func followSymlinks(path string) (fs.DirEntry, error) {

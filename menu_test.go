@@ -46,6 +46,7 @@ func TestBuildMenuSectionsUncached(t *testing.T) {
    echoargs  Echoes the args it received
    env       Prints environment variables
    exit      Exits with the given code
+   go:       Provides several commands
    hello     Prints "hello"
    suggest   Suggests arguments`,
 		nocolor(entrypoint.buildMenu(entrypoint.cmds, entrypoint).Sections.String()))
@@ -65,7 +66,7 @@ func TestBuildMenuSectionsReadFromCache(t *testing.T) {
 		t.Error(err)
 	}
 	defer os.Remove(f.Name())
-	f.Write([]byte(fmt.Sprintf(`{"summary":{"%s/echoargs":{"modTime":%d,"value":"CACHED SUMMARY"}}}`, fixtures, modTime)))
+	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"CACHED SUMMARY"}}}`, modTime)))
 	entrypoint.cachePath = f.Name()
 
 	assert.Equal(t,
@@ -87,7 +88,7 @@ func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 		t.Error(err)
 	}
 	defer os.Remove(f.Name())
-	f.Write([]byte(fmt.Sprintf(`{"summary":{"%s/echoargs":{"modTime":%d,"value":"STALE SUMMARY"}}}`, fixtures, modTime-1)))
+	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"STALE SUMMARY"}}}`, modTime-1)))
 	entrypoint.cachePath = f.Name()
 
 	assert.Equal(t,
@@ -98,7 +99,7 @@ func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(f)
 
-	assert.Equal(t, fmt.Sprintf(`{"summary":{"%s/echoargs":{"modTime":%d,"value":"Echoes the args it received"}}}`, fixtures, modTime), buf.String())
+	assert.Equal(t, fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"Echoes the args it received"}}}`, modTime), buf.String())
 }
 
 func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
@@ -126,7 +127,7 @@ func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(f)
 
-	assert.Equal(t, fmt.Sprintf(`{"summary":{"%s/echoargs":{"modTime":%d,"value":"Echoes the args it received"}}}`, fixtures, modTime), buf.String())
+	assert.Equal(t, fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"Echoes the args it received"}}}`, modTime), buf.String())
 }
 
 // TODO: support NOCOLOR and remove this
