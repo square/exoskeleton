@@ -162,7 +162,7 @@ func getSummaryFromMagicComments(reader *bufio.Reader) (string, error) {
 	for {
 		line, err = reader.ReadString('\n')
 		if strings.HasPrefix(line, "# SUMMARY:") {
-			return strings.TrimSuffix(strings.TrimPrefix(line[10:], " "), "\n"), nil
+			return strings.TrimRight(strings.TrimPrefix(line[10:], " "), "\n"), nil
 		}
 		if err == io.EOF {
 			return "", nil
@@ -190,7 +190,7 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 		}
 
 		if strings.HasPrefix(line, "# USAGE:") {
-			help += "USAGE\n   " + strings.TrimSuffix(strings.TrimPrefix(line[8:], " "), "\n") + "\n\n"
+			help += "USAGE\n   " + strings.TrimRight(strings.TrimPrefix(line[8:], " "), "\n") + "\n\n"
 		}
 
 		if inHelpText {
@@ -219,5 +219,5 @@ func getMessageFromExecution(path string, flag string) (string, error) {
 	if err != nil {
 		err = fmt.Errorf("failed to execute %s: %w", path, err)
 	}
-	return strings.TrimSuffix(string(out), "\n"), err
+	return strings.TrimRight(string(out), "\n"), err
 }
