@@ -26,9 +26,14 @@ func (cmd *executableCommand) Path() string         { return cmd.path }
 func (cmd *executableCommand) Name() string         { return cmd.name }
 func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
 
+// Command returns an exec.Cmd that will run the executable with the given arguments.
+func (cmd *executableCommand) Command(args ...string) *exec.Cmd {
+	return exec.Command(cmd.path, args...)
+}
+
 // Exec invokes the executable with the given arguments and environment.
 func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
-	command := exec.Command(cmd.path, args...)
+	command := cmd.Command(args...)
 	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
@@ -50,7 +55,7 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 // Complete invokes the executable with `--complete` as its first argument
 // and parses its output according to Cobra's ShellComp API.
 func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error) {
-	command := exec.Command(cmd.path, append([]string{"--complete", "--"}, args...)...)
+	command := cmd.Command(append([]string{"--complete", "--"}, args...)...)
 	command.Stdin = nil
 	command.Stderr = nil
 	command.Env = env
@@ -213,7 +218,7 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 }
 
 func (cmd *executableCommand) getMessageFromExecution(flag string) (string, error) {
-	command := exec.Command(cmd.path, "--"+flag)
+	command := cmd.Command("--" + flag)
 	command.Stderr = nil
 	out, err := command.Output()
 	if err != nil {
