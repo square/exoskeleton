@@ -25,10 +25,10 @@ func (e *Entrypoint) discoverIn(paths []string) (all Commands) {
 	return
 }
 
-func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
-	files, err := os.ReadDir(p)
+func (d *discoverer) discoverIn(path string, parent Module, all *Commands) {
+	files, err := os.ReadDir(path)
 	if err != nil {
-		d.onError(DiscoveryError{Cause: err, Path: p})
+		d.onError(DiscoveryError{Cause: err, Path: path})
 		// No return. We may have a partial list of files: "ReadDir returns the entries
 		// it was able to read before the error, along with the error"
 	}
@@ -37,7 +37,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 		name := file.Name()
 
 		if file.Type()&fs.ModeSymlink != 0 {
-			p := filepath.Join(p, name)
+			p := filepath.Join(path, name)
 			file, err = followSymlinks(p)
 			if err != nil {
 				d.onError(DiscoveryError{Cause: err, Path: p})
@@ -46,7 +46,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 		}
 
 		if file.IsDir() {
-			modulefilePath := filepath.Join(p, name, d.modulefile)
+			modulefilePath := filepath.Join(path, name, d.modulefile)
 
 			// Don't search directories that exceed the configured maxDepth
 			// or that don't contain the configured modulefile.
@@ -56,7 +56,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 						parent:       parent,
 						path:         modulefilePath,
 						name:         name,
-						discoveredIn: p,
+						discoveredIn: path,
 					},
 					discoverer: discoverer{
 						maxDepth:   d.maxDepth,
@@ -68,13 +68,13 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 			}
 
 		} else if ok, err := isExecutable(file); err != nil {
-			d.onError(DiscoveryError{Cause: err, Path: p})
+			d.onError(DiscoveryError{Cause: err, Path: path})
 		} else if ok {
 			*all = append(*all, &executableCommand{
 				parent:       parent,
-				path:         filepath.Join(p, name),
+				path:         filepath.Join(path, name),
 				name:         name,
-				discoveredIn: p,
+				discoveredIn: path,
 			})
 		}
 	}
