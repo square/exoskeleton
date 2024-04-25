@@ -10,7 +10,7 @@ import (
 type directoryModule struct {
 	executableCommand
 	cmds       Commands
-	discoverer *discoverer
+	discoverer discoverer
 }
 
 func (m *directoryModule) Exec(e *Entrypoint, args, env []string) error {

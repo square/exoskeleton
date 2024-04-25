@@ -59,7 +59,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 						name:         name,
 						discoveredIn: p,
 					},
-					discoverer: &discoverer{
+					discoverer: discoverer{
 						maxDepth:   d.maxDepth,
 						depth:      d.depth + 1,
 						onError:    d.onError,
