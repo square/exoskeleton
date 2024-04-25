@@ -34,49 +34,67 @@ func (d *discoverer) discoverIn(path string, parent Module, all *Commands) {
 	}
 
 	for _, file := range files {
-		name := file.Name()
+		if cmd, err := d.buildCommand(path, parent, file); err != nil {
+			d.onError(err)
+		} else if cmd != nil {
+			*all = append(*all, cmd)
+		}
+	}
+}
 
-		if file.Type()&fs.ModeSymlink != 0 {
-			p := filepath.Join(path, name)
-			file, err = followSymlinks(p)
-			if err != nil {
-				d.onError(DiscoveryError{Cause: err, Path: p})
-				continue // skip this file
-			}
+func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.DirEntry) (Command, error) {
+	name := file.Name()
+	path := filepath.Join(discoveredIn, name)
+
+	var err error
+	if file.Type()&fs.ModeSymlink != 0 {
+		file, err = followSymlinks(path)
+		if err != nil {
+			return nil, DiscoveryError{Cause: err, Path: path}
+		}
+	}
+
+	if file.IsDir() {
+		modulefilePath := filepath.Join(path, d.modulefile)
+
+		// If the directory doesn't contain the modulefile, it is just a regular directory
+		if !exists(modulefilePath) {
+			return nil, nil
 		}
 
-		if file.IsDir() {
-			modulefilePath := filepath.Join(path, name, d.modulefile)
+		// Stop discovering modules if we've searched past maxDepth
+		if d.maxDepth >= 0 && d.depth >= d.maxDepth {
+			return nil, nil
+		}
 
-			// Don't search directories that exceed the configured maxDepth
-			// or that don't contain the configured modulefile.
-			if (d.maxDepth == -1 || d.depth < d.maxDepth) && exists(modulefilePath) {
-				*all = append(*all, &directoryModule{
-					executableCommand: executableCommand{
-						parent:       parent,
-						path:         modulefilePath,
-						name:         name,
-						discoveredIn: path,
-					},
-					discoverer: discoverer{
-						maxDepth:   d.maxDepth,
-						depth:      d.depth + 1,
-						onError:    d.onError,
-						modulefile: d.modulefile,
-					},
-				})
-			}
-
-		} else if ok, err := isExecutable(file); err != nil {
-			d.onError(DiscoveryError{Cause: err, Path: path})
-		} else if ok {
-			*all = append(*all, &executableCommand{
+		return &directoryModule{
+			executableCommand: executableCommand{
 				parent:       parent,
-				path:         filepath.Join(path, name),
+				path:         modulefilePath,
 				name:         name,
-				discoveredIn: path,
-			})
+				discoveredIn: discoveredIn,
+			},
+			discoverer: discoverer{
+				maxDepth:   d.maxDepth,
+				depth:      d.depth + 1,
+				onError:    d.onError,
+				modulefile: d.modulefile,
+			},
+		}, nil
+	} else {
+		if ok, err := isExecutable(file); err != nil {
+			return nil, DiscoveryError{Cause: err, Path: path}
+		} else if !ok {
+			// If the file isn't executable, it is just a regular file
+			return nil, nil
 		}
+
+		return &executableCommand{
+			parent:       parent,
+			path:         path,
+			name:         name,
+			discoveredIn: discoveredIn,
+		}, nil
 	}
 }
 

@@ -1,12 +1,15 @@
 package exoskeleton
 
 import (
+	"io/fs"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDiscoverIn(t *testing.T) {
+func TestDiscoverInWithMaxDepth(t *testing.T) {
 	scenarios := []struct {
 		maxDepth int
 		expected []string
@@ -86,6 +89,55 @@ func TestDiscoverIn(t *testing.T) {
 		assert.Equal(t, s.expected, names, "When maxDepth=%d", s.maxDepth)
 	}
 }
+
+func TestDiscovererBuildsCommand(t *testing.T) {
+	var parent Module = &builtinModule{}
+	d := discoverer{onError: nil, modulefile: ".exoskeleton", maxDepth: 2}
+
+	scenarios := []struct {
+		executable string
+		expected   Command
+	}{
+		{
+			"echoargs",
+			&executableCommand{
+				parent:       parent,
+				name:         "echoargs",
+				path:         filepath.Join(fixtures, "echoargs"),
+				discoveredIn: fixtures,
+			},
+		},
+		{
+			"nested-1",
+			&directoryModule{
+				executableCommand: executableCommand{
+					parent:       parent,
+					name:         "nested-1",
+					path:         filepath.Join(fixtures, "nested-1", ".exoskeleton"),
+					discoveredIn: fixtures,
+				},
+				discoverer: discoverer{
+					maxDepth:   d.maxDepth,
+					depth:      d.depth + 1,
+					onError:    d.onError,
+					modulefile: d.modulefile,
+				},
+			},
+		},
+	}
+
+	for _, s := range scenarios {
+		path := filepath.Join(fixtures, s.executable)
+		info, err := os.Lstat(path)
+		assert.NoErrorf(t, err, "Given executable=%s", s.executable)
+		entry := fs.FileInfoToDirEntry(info)
+		cmd, err := d.buildCommand(fixtures, parent, entry)
+		assert.NoErrorf(t, err, "Given executable=%s", s.executable)
+
+		assert.Equalf(t, s.expected, cmd, "Given executable=%s", s.executable)
+	}
+}
+
 func TestFollowingSymlinks(t *testing.T) {
 	var cmds Commands
 	d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: 1}
