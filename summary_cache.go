@@ -59,10 +59,12 @@ func (c *summaryCache) Read(cmd Command) (string, error) {
 		c.load()
 	}
 
+	cacheKey := Usage(cmd)
+
 	modTime, err := modTime(cmd)
 	if err != nil {
 		c.onError(CacheError{Cause: err, Message: "skipping cache for " + cmd.Path()})
-	} else if item, ok := c.data.Summary[cmd.Path()]; ok && item.ModTime == modTime {
+	} else if item, ok := c.data.Summary[cacheKey]; ok && item.ModTime == modTime {
 		return item.Value, nil
 	}
 
@@ -71,7 +73,7 @@ func (c *summaryCache) Read(cmd Command) (string, error) {
 		if c.data.Summary == nil {
 			c.data.Summary = make(map[string]cachedValue)
 		}
-		c.data.Summary[cmd.Path()] = cachedValue{ModTime: modTime, Value: summary}
+		c.data.Summary[cacheKey] = cachedValue{ModTime: modTime, Value: summary}
 		c.dump()
 	}
 	return summary, err

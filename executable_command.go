@@ -18,6 +18,8 @@ type executableCommand struct {
 	parent       Module
 	path         string
 	name         string
+	args         []string
+	summary      string
 	discoveredIn string
 }
 
@@ -28,7 +30,7 @@ func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
 
 // Command returns an exec.Cmd that will run the executable with the given arguments.
 func (cmd *executableCommand) Command(args ...string) *exec.Cmd {
-	return exec.Command(cmd.path, args...)
+	return exec.Command(cmd.path, append(cmd.args, args...)...)
 }
 
 // Exec invokes the executable with the given arguments and environment.
@@ -77,6 +79,10 @@ func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]str
 // The executable is expected to write the summary to standard output and exit
 // successfully.
 func (cmd *executableCommand) Summary() (string, error) {
+	if cmd.summary != "" {
+		return cmd.summary, nil
+	}
+
 	return getMessageFromCommand(cmd, "summary")
 }
 

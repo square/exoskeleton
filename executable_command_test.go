@@ -26,3 +26,19 @@ func TestGetMessageFromExecutionTrimsLineBreaks(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "out", summary)
 }
+
+func TestGetMessageFromExecutionWithoutArgs(t *testing.T) {
+	cmd := &executableCommand{path: filepath.Join(fixtures, "echoargs")}
+	output, err := cmd.getMessageFromExecution("summary")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "--summary", output)
+}
+
+func TestGetMessageFromExecutionWithArgs(t *testing.T) {
+	cmd := &executableCommand{path: filepath.Join(fixtures, "echoargs"), args: []string{"a", "b"}}
+	output, err := cmd.getMessageFromExecution("summary")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "a\nb\n--summary", output)
+}
