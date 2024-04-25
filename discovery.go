@@ -3,7 +3,6 @@ package exoskeleton
 import (
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -38,7 +37,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 		name := file.Name()
 
 		if file.Type()&fs.ModeSymlink != 0 {
-			p := path.Join(p, name)
+			p := filepath.Join(p, name)
 			file, err = followSymlinks(p)
 			if err != nil {
 				d.onError(DiscoveryError{Cause: err, Path: p})
@@ -47,7 +46,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 		}
 
 		if file.IsDir() {
-			modulefilePath := path.Join(p, name, d.modulefile)
+			modulefilePath := filepath.Join(p, name, d.modulefile)
 
 			// Don't search directories that exceed the configured maxDepth
 			// or that don't contain the configured modulefile.
@@ -73,7 +72,7 @@ func (d *discoverer) discoverIn(p string, parent Module, all *Commands) {
 		} else if ok {
 			*all = append(*all, &executableCommand{
 				parent:       parent,
-				path:         path.Join(p, name),
+				path:         filepath.Join(p, name),
 				name:         name,
 				discoveredIn: p,
 			})
