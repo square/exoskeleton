@@ -31,7 +31,6 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 		fmt.Fprintf(os.Stderr, "getting module help for %#v\n", cmd)
 		return e.printModuleHelp(m, args)
 	} else if help, err := cmd.Help(); err != nil {
-		fmt.Fprintf(os.Stderr, "getting help for %#v\n", cmd)
 		e.onError(
 			CommandError{
 				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),
@@ -42,6 +41,7 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 
 		return err
 	} else {
+		fmt.Fprintf(os.Stderr, "getting help for %#v\n", cmd)
 		printHelp(help)
 		return nil
 	}
