@@ -44,6 +44,11 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 }
 
 func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
+	printHelp(e.buildModuleHelp(m, args))
+	return nil
+}
+
+func (e *Entrypoint) buildModuleHelp(m Module, args []string) string {
 	cmds := m.Subcommands()
 
 	var filteredArgs []string
@@ -64,8 +69,7 @@ func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
 		cmds = withoutModules(cmds.Flatten())
 	}
 
-	printHelp(e.buildMenu(cmds, m).String())
-	return nil
+	return e.buildMenu(cmds, m).String()
 }
 
 func withoutModules(cmds Commands) (all []Command) {
