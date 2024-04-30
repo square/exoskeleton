@@ -24,9 +24,11 @@ EXAMPLES
 
 // helpExec implements the 'help' command.
 func helpExec(e *Entrypoint, args, _ []string) error {
+	fmt.Fprintf(os.Stderr, "argrs: %#v\n", args)
 	if cmd, _ := e.Identify(args); IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
 	} else if m, ok := cmd.(Module); ok {
+		fmt.Fprintf(os.Stderr, "getting module help for %#v\n", cmd)
 		return e.printModuleHelp(m, args)
 	} else if help, err := cmd.Help(); err != nil {
 		fmt.Fprintf(os.Stderr, "getting help for %#v\n", cmd)

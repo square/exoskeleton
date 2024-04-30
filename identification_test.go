@@ -35,8 +35,8 @@ func TestIdentify(t *testing.T) {
 	a := &executableCommand{name: "a"}
 	b := &directoryModule{executableCommand: executableCommand{name: "b"}}
 	c := &executableCommand{parent: b, name: "c"}
-	d := &directoryModule{executableCommand: executableCommand{parent: b, name: "d"}}
-	e := &executableCommand{parent: d, name: "e"}
+	d := &executableModule{executableCommand: executableCommand{parent: b, name: "d"}}
+	e := &executableCommand{parent: d, args: []string{"e"}, name: "e"}
 	b.cmds = Commands{c, d}
 	d.cmds = Commands{e}
 
