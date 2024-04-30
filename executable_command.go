@@ -98,7 +98,7 @@ func (cmd *executableCommand) Help() (string, error) {
 	return getMessageFromCommand(cmd, "help")
 }
 
-// Reads the first two bytes from a file.
+// detectType reads the first two bytes from a file.
 // If they are `#!`, we can assume that the file is a shell script.
 //
 // Armed with this assumption, we can extract the command's documentation
