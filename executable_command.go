@@ -193,7 +193,7 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 	for {
 		line, err = reader.ReadString('\n')
 		if err == io.EOF {
-			return help, nil
+			return strings.TrimRight(help, "\n"), nil
 		}
 
 		if err != nil {
