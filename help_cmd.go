@@ -23,9 +23,9 @@ EXAMPLES
 
 // helpExec implements the 'help' command.
 func helpExec(e *Entrypoint, args, _ []string) error {
-	if cmd, _ := e.Identify(args); IsNull(cmd) {
+	if cmd, rest := e.Identify(args); IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
-	} else if help, err := e.helpFor(cmd, args); err != nil {
+	} else if help, err := e.helpFor(cmd, rest); err != nil {
 		e.onError(
 			CommandError{
 				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),
@@ -44,6 +44,8 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
 	if m, ok := cmd.(Module); ok {
 		return e.buildModuleHelp(m, args), nil
+	} else if p, ok := cmd.(helpWithArgsProvider); ok {
+		return p.helpWithArgs(args)
 	} else {
 		return cmd.Help()
 	}
