@@ -143,12 +143,12 @@ func getMessageFromCommand(cmd *executableCommand, message string) (string, erro
 	case script:
 		s, err := getMessageFromMagicComments(f, message)
 		if s == "" {
-			return cmd.getMessageFromExecution(message)
+			return getMessageFromExecution(cmd.Command("--" + message))
 		} else {
 			return s, err
 		}
 	case binary:
-		return cmd.getMessageFromExecution(message)
+		return getMessageFromExecution(cmd.Command("--" + message))
 	default:
 		return "", fmt.Errorf("Invalid value for t: %v", t)
 	}
@@ -223,12 +223,11 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 	}
 }
 
-func (cmd *executableCommand) getMessageFromExecution(flag string) (string, error) {
-	command := cmd.Command("--" + flag)
-	command.Stderr = nil
-	out, err := command.Output()
+func getMessageFromExecution(cmd *exec.Cmd) (string, error) {
+	cmd.Stderr = nil
+	out, err := cmd.Output()
 	if err != nil {
-		err = fmt.Errorf("failed to execute %s: %w", cmd.path, err)
+		err = fmt.Errorf("failed to execute %s: %w", cmd.Path, err)
 	}
 	return strings.TrimRight(string(out), "\n"), err
 }
