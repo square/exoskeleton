@@ -25,9 +25,7 @@ EXAMPLES
 func helpExec(e *Entrypoint, args, _ []string) error {
 	if cmd, _ := e.Identify(args); IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
-	} else if m, ok := cmd.(Module); ok {
-		return e.printModuleHelp(m, args)
-	} else if help, err := cmd.Help(); err != nil {
+	} else if help, err := e.helpFor(cmd, args); err != nil {
 		e.onError(
 			CommandError{
 				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),
@@ -40,6 +38,14 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 	} else {
 		printHelp(help)
 		return nil
+	}
+}
+
+func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
+	if m, ok := cmd.(Module); ok {
+		return e.buildModuleHelp(m, args), nil
+	} else {
+		return cmd.Help()
 	}
 }
 
