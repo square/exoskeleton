@@ -2,6 +2,7 @@ package exoskeleton
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 
 	"github.com/square/exit"
@@ -28,6 +29,7 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 	} else if m, ok := cmd.(Module); ok {
 		return e.printModuleHelp(m, args)
 	} else if help, err := cmd.Help(); err != nil {
+		fmt.Fprintf(os.Stderr, "getting help for %#v\n", cmd)
 		e.onError(
 			CommandError{
 				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),

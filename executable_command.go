@@ -30,7 +30,9 @@ func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
 
 // Command returns an exec.Cmd that will run the executable with the given arguments.
 func (cmd *executableCommand) Command(args ...string) *exec.Cmd {
-	return exec.Command(cmd.path, append(cmd.args, args...)...)
+	c := exec.Command(cmd.path, append(cmd.args, args...)...)
+	fmt.Fprintf(os.Stderr, "\033[90m%s\033[0m\n", strings.Join(c.Args, " "))
+	return c
 }
 
 // Exec invokes the executable with the given arguments and environment.
