@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# HELP: USAGE: help-from-magic-comments
+
+printf "hello"

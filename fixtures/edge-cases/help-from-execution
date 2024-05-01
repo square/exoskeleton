@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+for arg in "$@"; do
+  if [ "$arg" = "--help" ]; then
+    echo "USAGE: help from execution"
+    exit 0
+  fi
+done

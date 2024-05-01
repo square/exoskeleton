@@ -23,11 +23,9 @@ EXAMPLES
 
 // helpExec implements the 'help' command.
 func helpExec(e *Entrypoint, args, _ []string) error {
-	if cmd, _ := e.Identify(args); IsNull(cmd) {
+	if cmd, rest := e.Identify(args); IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
-	} else if m, ok := cmd.(Module); ok {
-		return e.printModuleHelp(m, args)
-	} else if help, err := cmd.Help(); err != nil {
+	} else if help, err := e.helpFor(cmd, rest); err != nil {
 		e.onError(
 			CommandError{
 				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),
@@ -43,7 +41,22 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 	}
 }
 
+func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
+	if m, ok := cmd.(Module); ok {
+		return e.buildModuleHelp(m, args), nil
+	} else if p, ok := cmd.(helpWithArgsProvider); ok {
+		return p.helpWithArgs(args)
+	} else {
+		return cmd.Help()
+	}
+}
+
 func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
+	printHelp(e.buildModuleHelp(m, args))
+	return nil
+}
+
+func (e *Entrypoint) buildModuleHelp(m Module, args []string) string {
 	cmds := m.Subcommands()
 
 	var filteredArgs []string
@@ -64,8 +77,7 @@ func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
 		cmds = withoutModules(cmds.Flatten())
 	}
 
-	printHelp(e.buildMenu(cmds, m).String())
-	return nil
+	return e.buildMenu(cmds, m).String()
 }
 
 func withoutModules(cmds Commands) (all []Command) {

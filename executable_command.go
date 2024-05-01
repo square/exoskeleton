@@ -98,7 +98,26 @@ func (cmd *executableCommand) Help() (string, error) {
 	return getMessageFromCommand(cmd, "help")
 }
 
-// Reads the first two bytes from a file.
+// helpWithArgs returns the help text for the command, passing
+// any arguments through to the executable that responds to --help.
+func (cmd *executableCommand) helpWithArgs(args []string) (string, error) {
+	if len(args) == 0 {
+		return cmd.Help()
+	} else {
+		return getMessageFromExecution(cmd.Command(append(args, "--help")...))
+	}
+}
+
+// helpWithArgsProvider can be implemented by commands to
+// provide HelpWithArgs, to accept command line arguments
+// when printing help.
+//
+// It is not exported yet because its API isn't stable.
+type helpWithArgsProvider interface {
+	helpWithArgs([]string) (string, error)
+}
+
+// detectType reads the first two bytes from a file.
 // If they are `#!`, we can assume that the file is a shell script.
 //
 // Armed with this assumption, we can extract the command's documentation
@@ -143,12 +162,12 @@ func getMessageFromCommand(cmd *executableCommand, message string) (string, erro
 	case script:
 		s, err := getMessageFromMagicComments(f, message)
 		if s == "" {
-			return cmd.getMessageFromExecution(message)
+			return getMessageFromExecution(cmd.Command("--" + message))
 		} else {
 			return s, err
 		}
 	case binary:
-		return cmd.getMessageFromExecution(message)
+		return getMessageFromExecution(cmd.Command("--" + message))
 	default:
 		return "", fmt.Errorf("Invalid value for t: %v", t)
 	}
@@ -193,7 +212,7 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 	for {
 		line, err = reader.ReadString('\n')
 		if err == io.EOF {
-			return help, nil
+			return strings.TrimRight(help, "\n"), nil
 		}
 
 		if err != nil {
@@ -223,12 +242,11 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 	}
 }
 
-func (cmd *executableCommand) getMessageFromExecution(flag string) (string, error) {
-	command := cmd.Command("--" + flag)
-	command.Stderr = nil
-	out, err := command.Output()
+func getMessageFromExecution(cmd *exec.Cmd) (string, error) {
+	cmd.Stderr = nil
+	out, err := cmd.Output()
 	if err != nil {
-		err = fmt.Errorf("failed to execute %s: %w", cmd.path, err)
+		err = fmt.Errorf("failed to execute %s: %w", cmd.Path, err)
 	}
 	return strings.TrimRight(string(out), "\n"), err
 }
