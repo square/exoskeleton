@@ -17,7 +17,8 @@ type discoverer struct {
 	modulefile string
 }
 
-func (e *Entrypoint) discoverIn(paths []string) (all Commands) {
+func (e *Entrypoint) discoverIn(paths []string) Commands {
+	all := Commands{}
 	d := &discoverer{
 		onError:    e.onError,
 		modulefile: e.moduleMetadataFilename,
@@ -26,7 +27,7 @@ func (e *Entrypoint) discoverIn(paths []string) (all Commands) {
 	for _, path := range paths {
 		d.discoverIn(path, e, &all)
 	}
-	return
+	return all
 }
 
 func (d *discoverer) discoverIn(path string, parent Module, all *Commands) {

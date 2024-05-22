@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestDiscoverInFindsNothing(t *testing.T) {
+	entrypoint := &Entrypoint{}
+	cmds := entrypoint.discoverIn([]string{filepath.Join(fixtures, "nope")})
+	assert.Equal(t, Commands{}, cmds)
+}
+
 func TestDiscoverInWithMaxDepth(t *testing.T) {
 	scenarios := []struct {
 		maxDepth int
