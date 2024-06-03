@@ -75,12 +75,12 @@ func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]str
 // When Command is a binary, it executes the command with the flag '--summary'.
 // The executable is expected to write the summary to standard output and exit
 // successfully.
-func (cmd *executableCommand) Summary() (string, error) {
+func (cmd *executableCommand) Summary() string {
 	if cmd.summary != "" {
-		return cmd.summary, nil
+		return cmd.summary
 	}
 
-	return getMessageFromCommand(cmd, "summary")
+	return cmd.entrypoint.readSummaryFromExecutable(cmd)
 }
 
 // Help returns the help text for the command.
@@ -91,18 +91,14 @@ func (cmd *executableCommand) Summary() (string, error) {
 // When Command is a binary, it executes the command with the flag '--help'.
 // The executable is expected to write the help text to standard output and exit
 // successfully.
-func (cmd *executableCommand) Help() (string, error) {
-	return getMessageFromCommand(cmd, "help")
+func (cmd *executableCommand) Help() string {
+	return cmd.helpWithArgs(nil)
 }
 
 // helpWithArgs returns the help text for the command, passing
 // any arguments through to the executable that responds to --help.
-func (cmd *executableCommand) helpWithArgs(args []string) (string, error) {
-	if len(args) == 0 {
-		return cmd.Help()
-	} else {
-		return getMessageFromExecution(cmd.Command(append(args, "--help")...))
-	}
+func (cmd *executableCommand) helpWithArgs(args []string) string {
+	return cmd.entrypoint.readHelpFromExecutable(cmd, args)
 }
 
 // helpWithArgsProvider can be implemented by commands to
@@ -111,5 +107,5 @@ func (cmd *executableCommand) helpWithArgs(args []string) (string, error) {
 //
 // It is not exported yet because its API isn't stable.
 type helpWithArgsProvider interface {
-	helpWithArgs([]string) (string, error)
+	helpWithArgs([]string) string
 }

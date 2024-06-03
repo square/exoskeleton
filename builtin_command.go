@@ -9,11 +9,11 @@ type builtinCommand struct {
 	definition *EmbeddedCommand
 }
 
-func (c *builtinCommand) Parent() Module           { return c.parent }
-func (c *builtinCommand) Path() string             { return c.parent.Path() }
-func (c *builtinCommand) Name() string             { return c.definition.Name }
-func (c *builtinCommand) Summary() (string, error) { return c.definition.Summary, nil }
-func (c *builtinCommand) Help() (string, error)    { return c.definition.Help, nil }
+func (c *builtinCommand) Parent() Module  { return c.parent }
+func (c *builtinCommand) Path() string    { return c.parent.Path() }
+func (c *builtinCommand) Name() string    { return c.definition.Name }
+func (c *builtinCommand) Summary() string { return c.definition.Summary }
+func (c *builtinCommand) Help() string    { return c.definition.Help }
 
 func (c *builtinCommand) Exec(e *Entrypoint, args, env []string) error {
 	return c.definition.Exec(e, args, env)

@@ -25,25 +25,16 @@ EXAMPLES
 func helpExec(e *Entrypoint, args, _ []string) error {
 	if cmd, rest := e.Identify(args); IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
-	} else if help, err := e.helpFor(cmd, rest); err != nil {
-		e.onError(
-			CommandError{
-				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),
-				Command: cmd,
-				Cause:   err,
-			},
-		)
-
-		return err
 	} else {
+		help := e.helpFor(cmd, rest)
 		printHelp(help)
 		return nil
 	}
 }
 
-func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
+func (e *Entrypoint) helpFor(cmd Command, args []string) string {
 	if m, ok := cmd.(Module); ok {
-		return e.buildModuleHelp(m, args), nil
+		return e.buildModuleHelp(m, args)
 	} else if p, ok := cmd.(helpWithArgsProvider); ok {
 		return p.helpWithArgs(args)
 	} else {

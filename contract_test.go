@@ -10,7 +10,7 @@ import (
 
 func TestGetMessageFromExecutionHandlesErrors(t *testing.T) {
 	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "edge-cases", "summary-fail")}
-	summary, err := getMessageFromExecution(cmd.Command("--summary"))
+	summary, err := getMessageFromExecution(cmd, nil, "summary")
 
 	var ee *exec.ExitError
 
@@ -21,7 +21,7 @@ func TestGetMessageFromExecutionHandlesErrors(t *testing.T) {
 
 func TestGetMessageFromExecutionTrimsLineBreaks(t *testing.T) {
 	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "edge-cases", "summary-with-newlines")}
-	summary, err := getMessageFromExecution(cmd.Command("--summary"))
+	summary, err := getMessageFromExecution(cmd, nil, "summary")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "out", summary)
@@ -29,7 +29,7 @@ func TestGetMessageFromExecutionTrimsLineBreaks(t *testing.T) {
 
 func TestGetMessageFromExecutionWithoutArgs(t *testing.T) {
 	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "echoargs")}
-	output, err := getMessageFromExecution(cmd.Command("--summary"))
+	output, err := getMessageFromExecution(cmd, nil, "summary")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "--summary", output)
@@ -37,7 +37,7 @@ func TestGetMessageFromExecutionWithoutArgs(t *testing.T) {
 
 func TestGetMessageFromExecutionWithArgs(t *testing.T) {
 	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "echoargs"), args: []string{"a", "b"}}
-	output, err := getMessageFromExecution(cmd.Command("--summary"))
+	output, err := getMessageFromExecution(cmd, nil, "summary")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "a\nb\n--summary", output)

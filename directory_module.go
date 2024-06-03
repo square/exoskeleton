@@ -20,12 +20,12 @@ func (m *directoryModule) Complete(_ *Entrypoint, args, _ []string) ([]string, s
 	return m.Subcommands().completionsFor(args)
 }
 
-func (m *directoryModule) Summary() (string, error) {
-	return getMessageFromDir(m.path, "summary")
+func (m *directoryModule) Summary() string {
+	return m.entrypoint.readSummaryFromModulefile(m)
 }
 
-func (m *directoryModule) Help() (string, error) {
-	return getMessageFromDir(m.path, "help")
+func (m *directoryModule) Help() string {
+	panic("Unused")
 }
 
 func (m *directoryModule) Subcommands() Commands {

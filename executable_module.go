@@ -1,9 +1,6 @@
 package exoskeleton
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
 
@@ -13,12 +10,12 @@ type executableModule struct {
 	discoverer discoverer
 }
 
-func (m *executableModule) Summary() (string, error) {
+func (m *executableModule) Summary() string {
 	if m.cmds == nil {
 		m.discover()
 	}
 
-	return m.summary, nil
+	return m.summary
 }
 
 func (m *executableModule) Exec(e *Entrypoint, args, env []string) error {
@@ -41,32 +38,7 @@ func (m *executableModule) Subcommands() Commands {
 // of modules and subcommands (all to be invoked through the given executable)
 // from the JSON output.
 func (m *executableModule) discover() {
-	cmd := m.Command("--describe-commands")
-	cmd.Stderr = nil
-	output, err := cmd.Output()
-	if err != nil {
-		m.discoverer.onError(
-			CommandError{
-				Message: fmt.Sprintf("could not execute `%s --describe-commands`: %s", Usage(m), err.Error()),
-				Command: m,
-				Cause:   err,
-			},
-		)
-		return
-	}
-
-	var descriptor *commandDescriptor
-	if err := json.Unmarshal(output, &descriptor); err != nil {
-		m.discoverer.onError(
-			CommandError{
-				Message: fmt.Sprintf("could not parse output from `%s --describe-commands`: %s", Usage(m), err.Error()),
-				Command: m,
-				Cause:   err,
-			},
-		)
-		return
-	}
-
+	descriptor := m.entrypoint.describeCommands(m)
 	m.name = descriptor.Name
 	m.summary = descriptor.Summary
 	m.cmds = m.discoverer.toCommands(m, descriptor.Commands, nil)

@@ -40,12 +40,12 @@ type Entrypoint struct {
 	cmdsToPrepend            []Command
 }
 
-func (e *Entrypoint) Parent() Module           { return nil }
-func (e *Entrypoint) Path() string             { return e.path }
-func (e *Entrypoint) Name() string             { return e.name }
-func (e *Entrypoint) Summary() (string, error) { panic("Unused") }
-func (e *Entrypoint) Help() (string, error)    { panic("Unused") }
-func (e *Entrypoint) Subcommands() Commands    { return e.cmds }
+func (e *Entrypoint) Parent() Module        { return nil }
+func (e *Entrypoint) Path() string          { return e.path }
+func (e *Entrypoint) Name() string          { return e.name }
+func (e *Entrypoint) Summary() string       { panic("Unused") }
+func (e *Entrypoint) Help() string          { panic("Unused") }
+func (e *Entrypoint) Subcommands() Commands { return e.cmds }
 
 // New searches the given paths and constructs an Entrypoint with a list of commands
 // discovered in those paths. It also accepts options that can be used to customize

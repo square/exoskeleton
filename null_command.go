@@ -11,11 +11,11 @@ type nullCommand struct {
 	name   string
 }
 
-func (n nullCommand) Parent() Module           { return n.parent }
-func (_ nullCommand) Path() string             { return "" }
-func (n nullCommand) Name() string             { return n.name }
-func (_ nullCommand) Summary() (string, error) { panic("Unused") }
-func (_ nullCommand) Help() (string, error)    { panic("Unused") }
+func (n nullCommand) Parent() Module  { return n.parent }
+func (_ nullCommand) Path() string    { return "" }
+func (n nullCommand) Name() string    { return n.name }
+func (_ nullCommand) Summary() string { panic("Unused") }
+func (_ nullCommand) Help() string    { panic("Unused") }
 
 func (n nullCommand) Exec(e *Entrypoint, _, _ []string) error {
 	return exit.ErrUnknownSubcommand

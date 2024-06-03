@@ -37,8 +37,8 @@ type Command interface {
 
 	// Summary returns the (short!) description of the command to be displayed
 	// in menus.
-	Summary() (string, error)
+	Summary() string
 
 	// Help returns the help text for the command.
-	Help() (string, error)
+	Help() string
 }

@@ -50,7 +50,7 @@ func (c *summaryCache) dump() {
 	}
 }
 
-func (c *summaryCache) Read(cmd Command) (string, error) {
+func (c *summaryCache) Read(cmd Command) string {
 	if _, ok := cmd.(*builtinCommand); ok {
 		return cmd.Summary()
 	}
@@ -65,18 +65,18 @@ func (c *summaryCache) Read(cmd Command) (string, error) {
 	if err != nil {
 		c.onError(CacheError{Cause: err, Message: "skipping cache for " + cmd.Path()})
 	} else if item, ok := c.data.Summary[cacheKey]; ok && item.ModTime == modTime {
-		return item.Value, nil
+		return item.Value
 	}
 
-	summary, err := cmd.Summary()
-	if err == nil {
+	summary := cmd.Summary()
+	if summary != "" {
 		if c.data.Summary == nil {
 			c.data.Summary = make(map[string]cachedValue)
 		}
 		c.data.Summary[cacheKey] = cachedValue{ModTime: modTime, Value: summary}
 		c.dump()
 	}
-	return summary, err
+	return summary
 }
 
 func modTime(cmd Command) (int64, error) {

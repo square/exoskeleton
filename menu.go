@@ -27,15 +27,7 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 			seen[name] = true
 		}
 
-		if summary, err := cache.Read(cmd); err != nil {
-			e.onError(
-				CommandError{
-					Message: fmt.Sprintf("error getting summary from %s: %s", Usage(cmd), err.Error()),
-					Command: cmd,
-					Cause:   err,
-				},
-			)
-		} else if summary != "" {
+		if summary := cache.Read(cmd); summary != "" {
 			heading := e.menuHeadingFor(m, cmd)
 			items = append(items, &menuItem{Name: name, Summary: summary, Heading: heading})
 		}
