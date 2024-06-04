@@ -1,7 +1,6 @@
 package exoskeleton
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/square/exoskeleton/pkg/shellcomp"
@@ -35,14 +34,4 @@ func (m *directoryModule) Subcommands() Commands {
 	}
 
 	return m.cmds
-}
-
-func getMessageFromDir(path string, flag string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	return getMessageFromMagicComments(f, flag)
 }
