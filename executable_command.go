@@ -79,7 +79,7 @@ func (cmd *executableCommand) Summary() (string, error) {
 		return cmd.summary, nil
 	}
 
-	return getMessageFromCommand(cmd, "summary")
+	return readSummaryFromExecutable(cmd)
 }
 
 // Help returns the help text for the command.
@@ -91,17 +91,13 @@ func (cmd *executableCommand) Summary() (string, error) {
 // The executable is expected to write the help text to standard output and exit
 // successfully.
 func (cmd *executableCommand) Help() (string, error) {
-	return getMessageFromCommand(cmd, "help")
+	return cmd.helpWithArgs(nil)
 }
 
 // helpWithArgs returns the help text for the command, passing
 // any arguments through to the executable that responds to --help.
 func (cmd *executableCommand) helpWithArgs(args []string) (string, error) {
-	if len(args) == 0 {
-		return cmd.Help()
-	} else {
-		return getMessageFromExecution(cmd.Command(append(args, "--help")...))
-	}
+	return readHelpFromExecutable(cmd, args)
 }
 
 // helpWithArgsProvider can be implemented by commands to

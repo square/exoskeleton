@@ -21,7 +21,7 @@ func (m *directoryModule) Complete(_ *Entrypoint, args, _ []string) ([]string, s
 }
 
 func (m *directoryModule) Summary() (string, error) {
-	return getMessageFromDir(m.path, "summary")
+	return readSummaryFromModulefile(m)
 }
 
 func (m *directoryModule) Help() (string, error) {

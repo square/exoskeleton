@@ -26,14 +26,7 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 	if cmd, rest := e.Identify(args); IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
 	} else if help, err := e.helpFor(cmd, rest); err != nil {
-		e.onError(
-			CommandError{
-				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),
-				Command: cmd,
-				Cause:   err,
-			},
-		)
-
+		e.onError(err)
 		return err
 	} else {
 		printHelp(help)
