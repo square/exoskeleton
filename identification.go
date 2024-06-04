@@ -35,7 +35,9 @@ func identify(m Module, args []string) (Command, []string) {
 		return identify(m, append(without(strings.Split(name, ":"), ""), rest...))
 	}
 
-	if cmd := m.Subcommands().Find(name); cmd == nil {
+	// TODO: return this error
+	cmds, _ := m.Subcommands()
+	if cmd := cmds.Find(name); cmd == nil {
 		return nullCommand{parent: m, name: name}, rest
 	} else if submodule, ok := cmd.(Module); ok {
 		return identify(submodule, rest)

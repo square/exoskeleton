@@ -180,7 +180,9 @@ func TestFollowingSymlinks(t *testing.T) {
 	d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: 1}
 	d.discoverIn(fixtures, nil, &cmds)
 
-	cmd := cmds.Find("symlink-test").(Module).Subcommands().Find("hello-prime")
+	cmds, err := cmds.Find("symlink-test").(Module).Subcommands()
+	assert.NoError(t, err)
 
+	cmd := cmds.Find("hello-prime")
 	assert.FileExists(t, cmd.Path())
 }

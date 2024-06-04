@@ -12,7 +12,9 @@ type executableModule struct {
 
 func (m *executableModule) Summary() (string, error) {
 	if m.cmds == nil {
-		m.discoverer.onError(m.discover())
+		if err := m.discover(); err != nil {
+			return "", err
+		}
 	}
 
 	return m.summary, nil
@@ -23,15 +25,17 @@ func (m *executableModule) Exec(e *Entrypoint, args, env []string) error {
 }
 
 func (m *executableModule) Complete(_ *Entrypoint, args, _ []string) ([]string, shellcomp.Directive, error) {
-	return m.Subcommands().completionsFor(args)
+	return completionsForModule(m, args)
 }
 
-func (m *executableModule) Subcommands() Commands {
+func (m *executableModule) Subcommands() (Commands, error) {
 	if m.cmds == nil {
-		m.discoverer.onError(m.discover())
+		if err := m.discover(); err != nil {
+			return Commands{}, err
+		}
 	}
 
-	return m.cmds
+	return m.cmds, nil
 }
 
 // discover invokes an executable with `--describe-commands` and constructs a tree

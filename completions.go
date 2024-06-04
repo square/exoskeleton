@@ -38,6 +38,14 @@ func (e *Entrypoint) completionsFor(args, env []string, completeArgs bool) ([]st
 	return finalCmd.Complete(e, append(finalCmdArgs, toComplete), env)
 }
 
+func completionsForModule(m Module, args []string) ([]string, shellcomp.Directive, error) {
+	cmds, err := m.Subcommands()
+	if err != nil {
+		return nil, shellcomp.DirectiveError, err
+	}
+	return cmds.completionsFor(args)
+}
+
 func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, error) {
 	var completions []string
 
