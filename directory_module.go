@@ -25,7 +25,7 @@ func (m *directoryModule) Summary() (string, error) {
 }
 
 func (m *directoryModule) Help() (string, error) {
-	return getMessageFromDir(m.path, "help")
+	panic("Unused")
 }
 
 func (m *directoryModule) Subcommands() Commands {
