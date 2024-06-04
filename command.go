@@ -37,8 +37,14 @@ type Command interface {
 
 	// Summary returns the (short!) description of the command to be displayed
 	// in menus.
+	//
+	// Returns a CommandError if the command does not fulfill the contract
+	// for providing its summary.
 	Summary() (string, error)
 
 	// Help returns the help text for the command.
+	//
+	// Returns a CommandError if the command does not fulfill the contract
+	// for providing its help.
 	Help() (string, error)
 }

@@ -11,6 +11,9 @@ import "strings"
 //
 // If no command is identified, Identify invokes CommandNotFound callbacks and
 // returns NullCommand.
+//
+// Returns a CommandError if the command does not fulfill the contract
+// for providing its subcommands.
 func (e *Entrypoint) Identify(rawArgs []string) (Command, []string, error) {
 	cmd, args, err := identify(e, normalizeArgs(rawArgs))
 
