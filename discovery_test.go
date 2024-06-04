@@ -114,55 +114,6 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 	var parent Module = &builtinModule{}
 	d := discoverer{onError: nil, modulefile: ".exoskeleton", maxDepth: 2}
 
-	cmdGo := &executableModule{
-		executableCommand: executableCommand{
-			parent:       parent,
-			name:         "go",
-			path:         filepath.Join(fixtures, "go.exoskeleton"),
-			discoveredIn: fixtures,
-			summary:      "Provides several commands",
-		},
-	}
-	cmdGoMod := &executableModule{
-		executableCommand: executableCommand{
-			parent:       cmdGo,
-			name:         "mod",
-			path:         filepath.Join(fixtures, "go.exoskeleton"),
-			args:         []string{"mod"},
-			discoveredIn: fixtures,
-			summary:      "module maintenance",
-		},
-	}
-	cmdGo.cmds = Commands{
-		&executableCommand{
-			parent:       cmdGo,
-			name:         "build",
-			path:         filepath.Join(fixtures, "go.exoskeleton"),
-			args:         []string{"build"},
-			summary:      "compile packages and dependencies",
-			discoveredIn: fixtures,
-		},
-		cmdGoMod,
-	}
-	cmdGoMod.cmds = Commands{
-		&executableCommand{
-			parent:       cmdGoMod,
-			name:         "init",
-			path:         filepath.Join(fixtures, "go.exoskeleton"),
-			args:         []string{"mod", "init"},
-			summary:      "initialize new module in current directory",
-			discoveredIn: fixtures,
-		},
-		&executableCommand{
-			parent:       cmdGoMod,
-			name:         "tidy",
-			path:         filepath.Join(fixtures, "go.exoskeleton"),
-			args:         []string{"mod", "tidy"},
-			summary:      "add missing and remove unused modules",
-			discoveredIn: fixtures,
-		},
-	}
-
 	scenarios := []struct {
 		executable string
 		expected   Command
@@ -195,7 +146,20 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 		},
 		{
 			"go.exoskeleton",
-			cmdGo,
+			&executableModule{
+				executableCommand: executableCommand{
+					parent:       parent,
+					name:         "go",
+					path:         filepath.Join(fixtures, "go.exoskeleton"),
+					discoveredIn: fixtures,
+				},
+				discoverer: discoverer{
+					maxDepth:   d.maxDepth,
+					depth:      d.depth + 1,
+					onError:    d.onError,
+					modulefile: d.modulefile,
+				},
+			},
 		},
 	}
 
