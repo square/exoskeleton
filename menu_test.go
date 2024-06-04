@@ -11,6 +11,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestBuildEmptyMenu(t *testing.T) {
+	entrypoint := &Entrypoint{name: "entrypoint"}
+	module := &directoryModule{executableCommand: executableCommand{entrypoint: entrypoint, parent: entrypoint, name: "module"}}
+	entrypoint.cmds = Commands{module}
+
+	assert.Equal(t, 0, len(entrypoint.buildMenu(entrypoint.cmds, entrypoint).Sections))
+	assert.Equal(t, "", entrypoint.buildMenu(entrypoint.cmds, entrypoint).String())
+}
+
 func TestBuildMenuUsage(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
 	module := &directoryModule{executableCommand: executableCommand{entrypoint: entrypoint, parent: entrypoint, name: "module"}}

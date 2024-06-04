@@ -70,6 +70,10 @@ type menu struct {
 }
 
 func (m menu) String() string {
+	if len(m.Sections) == 0 {
+		return ""
+	}
+
 	return fmt.Sprintf("USAGE\n   %s\n\n%s\n\n%s", m.Usage, m.Sections, m.Trailer)
 }
 
