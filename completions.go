@@ -29,7 +29,10 @@ func (e *Entrypoint) completionsFor(args, env []string, completeArgs bool) ([]st
 	trimmedArgs := args[:len(args)-1]
 
 	// Find the real command for which completion must be performed
-	finalCmd, finalCmdArgs := e.Identify(trimmedArgs)
+	finalCmd, finalCmdArgs, err := e.Identify(trimmedArgs)
+	if err != nil {
+		return nil, shellcomp.DirectiveError, err
+	}
 
 	if _, isModule := finalCmd.(Module); !isModule && !completeArgs {
 		return nil, shellcomp.DirectiveNoFileComp, nil

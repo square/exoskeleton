@@ -23,10 +23,11 @@ EXAMPLES
 
 // helpExec implements the 'help' command.
 func helpExec(e *Entrypoint, args, _ []string) error {
-	if cmd, rest := e.Identify(args); IsNull(cmd) {
+	if cmd, rest, err := e.Identify(args); err != nil {
+		return err
+	} else if IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
 	} else if help, err := e.helpFor(cmd, rest); err != nil {
-		e.onError(err)
 		return err
 	} else {
 		printHelp(help)

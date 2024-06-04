@@ -25,7 +25,9 @@ EXAMPLES
 
 // whichExec implements the 'which' command.
 func whichExec(e *Entrypoint, args, _ []string) error {
-	if cmd, _ := e.Identify(args); IsNull(cmd) {
+	if cmd, _, err := e.Identify(args); err != nil {
+		return err
+	} else if IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
 	} else {
 		willResolveSymlinks := false

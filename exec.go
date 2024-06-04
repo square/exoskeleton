@@ -15,7 +15,10 @@ func Exec(paths []string, options ...Option) {
 	}
 
 	// Identify the subcommand being invoked from the arguments.
-	cmd, args := e.Identify(os.Args[1:])
+	cmd, args, err := e.Identify(os.Args[1:])
+	if err != nil {
+		panic(err)
+	}
 
 	// Execute the subcommand.
 	err = cmd.Exec(e, args, os.Environ())

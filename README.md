@@ -45,7 +45,7 @@ func main() {
 	cli, _ := exoskeleton.New(paths)
 
 	// 2. Identify the subcommand being invoked from the arguments.
-	cmd, args := cli.Identify(os.Args[1:])
+	cmd, args, _ := cli.Identify(os.Args[1:])
 
 	// 3. Execute the subcommand.
 	err := cmd.Exec(cli, args, os.Environ())
