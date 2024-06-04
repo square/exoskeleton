@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetMessageFromExecutionHandlesErrors(t *testing.T) {
-	cmd := &executableCommand{path: filepath.Join(fixtures, "edge-cases", "summary-fail")}
+	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "edge-cases", "summary-fail")}
 	summary, err := getMessageFromExecution(cmd.Command("--summary"))
 
 	var ee *exec.ExitError
@@ -20,7 +20,7 @@ func TestGetMessageFromExecutionHandlesErrors(t *testing.T) {
 }
 
 func TestGetMessageFromExecutionTrimsLineBreaks(t *testing.T) {
-	cmd := &executableCommand{path: filepath.Join(fixtures, "edge-cases", "summary-with-newlines")}
+	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "edge-cases", "summary-with-newlines")}
 	summary, err := getMessageFromExecution(cmd.Command("--summary"))
 
 	assert.NoError(t, err)
@@ -28,7 +28,7 @@ func TestGetMessageFromExecutionTrimsLineBreaks(t *testing.T) {
 }
 
 func TestGetMessageFromExecutionWithoutArgs(t *testing.T) {
-	cmd := &executableCommand{path: filepath.Join(fixtures, "echoargs")}
+	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "echoargs")}
 	output, err := getMessageFromExecution(cmd.Command("--summary"))
 
 	assert.NoError(t, err)
@@ -36,7 +36,7 @@ func TestGetMessageFromExecutionWithoutArgs(t *testing.T) {
 }
 
 func TestGetMessageFromExecutionWithArgs(t *testing.T) {
-	cmd := &executableCommand{path: filepath.Join(fixtures, "echoargs"), args: []string{"a", "b"}}
+	cmd := &executableCommand{entrypoint: &Entrypoint{}, path: filepath.Join(fixtures, "echoargs"), args: []string{"a", "b"}}
 	output, err := getMessageFromExecution(cmd.Command("--summary"))
 
 	assert.NoError(t, err)

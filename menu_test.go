@@ -13,7 +13,7 @@ import (
 
 func TestBuildMenuUsage(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
-	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
+	module := &directoryModule{executableCommand: executableCommand{entrypoint: entrypoint, parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
 	assert.Equal(t, "entrypoint <command> [<args>]", entrypoint.buildMenu(entrypoint.cmds, entrypoint).Usage)
@@ -22,7 +22,7 @@ func TestBuildMenuUsage(t *testing.T) {
 
 func TestBuildMenuTrailer(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
-	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
+	module := &directoryModule{executableCommand: executableCommand{entrypoint: entrypoint, parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
 	assert.Equal(t,
@@ -54,7 +54,7 @@ func TestBuildMenuSectionsUncached(t *testing.T) {
 
 func TestBuildMenuSectionsReadFromCache(t *testing.T) {
 	entrypoint := newWithDefaults("/entrypoint")
-	cmd := &executableCommand{parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
+	cmd := &executableCommand{entrypoint: entrypoint, parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
 	modTime, err := modTime(cmd)
 	if err != nil {
 		t.Error(err)
@@ -76,7 +76,7 @@ func TestBuildMenuSectionsReadFromCache(t *testing.T) {
 
 func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 	entrypoint := newWithDefaults("/entrypoint")
-	cmd := &executableCommand{parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
+	cmd := &executableCommand{entrypoint: entrypoint, parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
 	modTime, err := modTime(cmd)
 	if err != nil {
 		t.Error(err)
@@ -104,7 +104,7 @@ func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 
 func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
 	entrypoint := newWithDefaults("/entrypoint")
-	cmd := &executableCommand{parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
+	cmd := &executableCommand{entrypoint: entrypoint, parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
 	modTime, err := modTime(cmd)
 	if err != nil {
 		t.Error(err)

@@ -10,23 +10,21 @@ import (
 const executableModuleExtension = ".exoskeleton"
 
 type discoverer struct {
-	maxDepth   int
+	entrypoint *Entrypoint
 	depth      int
-	onError    func(error)
-	modulefile string
 }
 
 func (e *Entrypoint) discoverIn(paths []string) Commands {
 	all := Commands{}
-	d := &discoverer{
-		onError:    e.onError,
-		modulefile: e.moduleMetadataFilename,
-		maxDepth:   e.maxDepth,
-	}
+	d := &discoverer{entrypoint: e}
 	for _, path := range paths {
 		d.discoverIn(path, e, &all)
 	}
 	return all
+}
+
+func (d *discoverer) onError(err error) {
+	d.entrypoint.onError(err)
 }
 
 func (d *discoverer) discoverIn(path string, parent Module, all *Commands) {
@@ -59,7 +57,7 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 	}
 
 	if file.IsDir() {
-		modulefilePath := filepath.Join(path, d.modulefile)
+		modulefilePath := filepath.Join(path, d.entrypoint.moduleMetadataFilename)
 
 		// If the directory doesn't contain the modulefile, it is just a regular directory
 		if !exists(modulefilePath) {
@@ -67,22 +65,21 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 		}
 
 		// Stop discovering modules if we've searched past maxDepth
-		if d.maxDepth >= 0 && d.depth >= d.maxDepth {
+		if d.entrypoint.maxDepth >= 0 && d.depth >= d.entrypoint.maxDepth {
 			return nil, nil
 		}
 
 		return &directoryModule{
 			executableCommand: executableCommand{
+				entrypoint:   d.entrypoint,
 				parent:       parent,
 				path:         modulefilePath,
 				name:         name,
 				discoveredIn: discoveredIn,
 			},
 			discoverer: discoverer{
-				maxDepth:   d.maxDepth,
+				entrypoint: d.entrypoint,
 				depth:      d.depth + 1,
-				onError:    d.onError,
-				modulefile: d.modulefile,
 			},
 		}, nil
 	} else {
@@ -94,6 +91,7 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 		}
 
 		executable := &executableCommand{
+			entrypoint:   d.entrypoint,
 			parent:       parent,
 			path:         path,
 			name:         strings.TrimSuffix(name, executableModuleExtension),
@@ -101,14 +99,12 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 		}
 
 		// if the executable has the extension ".exoskeleton" then we should treat it as a module.
-		if filepath.Ext(name) == executableModuleExtension && (d.maxDepth == -1 || d.depth < d.maxDepth) {
+		if filepath.Ext(name) == executableModuleExtension && (d.entrypoint.maxDepth == -1 || d.depth < d.entrypoint.maxDepth) {
 			return &executableModule{
 				executableCommand: *executable,
 				discoverer: discoverer{
-					maxDepth:   d.maxDepth,
+					entrypoint: d.entrypoint,
 					depth:      d.depth + 1,
-					onError:    d.onError,
-					modulefile: d.modulefile,
 				},
 			}, nil
 		}

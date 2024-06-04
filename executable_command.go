@@ -11,6 +11,7 @@ import (
 
 // executableCommand implements the Command interface for a file that can be executed.
 type executableCommand struct {
+	entrypoint   *Entrypoint
 	parent       Module
 	path         string
 	name         string

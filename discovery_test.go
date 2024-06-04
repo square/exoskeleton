@@ -98,7 +98,7 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 
 	for _, s := range scenarios {
 		var cmds Commands
-		d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: s.maxDepth}
+		d := discoverer{entrypoint: &Entrypoint{moduleMetadataFilename: ".exoskeleton", maxDepth: s.maxDepth}}
 		d.discoverIn(fixtures, nil, &cmds)
 
 		var names []string
@@ -112,7 +112,7 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 
 func TestDiscovererBuildsCommand(t *testing.T) {
 	var parent Module = &builtinModule{}
-	d := discoverer{onError: nil, modulefile: ".exoskeleton", maxDepth: 2}
+	d := discoverer{entrypoint: &Entrypoint{moduleMetadataFilename: ".exoskeleton", maxDepth: 2}}
 
 	scenarios := []struct {
 		executable string
@@ -121,6 +121,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 		{
 			"echoargs",
 			&executableCommand{
+				entrypoint:   d.entrypoint,
 				parent:       parent,
 				name:         "echoargs",
 				path:         filepath.Join(fixtures, "echoargs"),
@@ -131,16 +132,15 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 			"nested-1",
 			&directoryModule{
 				executableCommand: executableCommand{
+					entrypoint:   d.entrypoint,
 					parent:       parent,
 					name:         "nested-1",
 					path:         filepath.Join(fixtures, "nested-1", ".exoskeleton"),
 					discoveredIn: fixtures,
 				},
 				discoverer: discoverer{
-					maxDepth:   d.maxDepth,
+					entrypoint: d.entrypoint,
 					depth:      d.depth + 1,
-					onError:    d.onError,
-					modulefile: d.modulefile,
 				},
 			},
 		},
@@ -148,16 +148,15 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 			"go.exoskeleton",
 			&executableModule{
 				executableCommand: executableCommand{
+					entrypoint:   d.entrypoint,
 					parent:       parent,
 					name:         "go",
 					path:         filepath.Join(fixtures, "go.exoskeleton"),
 					discoveredIn: fixtures,
 				},
 				discoverer: discoverer{
-					maxDepth:   d.maxDepth,
+					entrypoint: d.entrypoint,
 					depth:      d.depth + 1,
-					onError:    d.onError,
-					modulefile: d.modulefile,
 				},
 			},
 		},
@@ -177,7 +176,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 
 func TestFollowingSymlinks(t *testing.T) {
 	var cmds Commands
-	d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: 1}
+	d := discoverer{entrypoint: &Entrypoint{moduleMetadataFilename: ".exoskeleton", maxDepth: 1}}
 	d.discoverIn(fixtures, nil, &cmds)
 
 	cmd := cmds.Find("symlink-test").(Module).Subcommands().Find("hello-prime")

@@ -72,7 +72,7 @@ func (d *discoverer) toCommands(parent *executableModule, descriptors []*command
 		}
 
 		depth := d.depth + len(args)
-		if len(descriptor.Commands) > 0 && (d.maxDepth == -1 || depth < d.maxDepth) {
+		if len(descriptor.Commands) > 0 && (d.entrypoint.maxDepth == -1 || depth < d.entrypoint.maxDepth) {
 			m := &executableModule{executableCommand: *c}
 			m.cmds = d.toCommands(m, descriptor.Commands, append(args, m.name))
 			cmds = append(cmds, m)
