@@ -2,6 +2,7 @@ package exoskeleton
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
@@ -44,13 +45,25 @@ func (m *executableModule) discover() {
 	cmd.Stderr = nil
 	output, err := cmd.Output()
 	if err != nil {
-		m.discoverer.onError(DiscoveryError{Cause: err, Path: m.path})
+		m.discoverer.onError(
+			CommandError{
+				Message: fmt.Sprintf("could not execute `%s --describe-commands`: %s", Usage(m), err.Error()),
+				Command: m,
+				Cause:   err,
+			},
+		)
 		return
 	}
 
 	var descriptor *commandDescriptor
 	if err := json.Unmarshal(output, &descriptor); err != nil {
-		m.discoverer.onError(DiscoveryError{Cause: err, Path: m.path})
+		m.discoverer.onError(
+			CommandError{
+				Message: fmt.Sprintf("could not parse output from `%s --describe-commands`: %s", Usage(m), err.Error()),
+				Command: m,
+				Cause:   err,
+			},
+		)
 		return
 	}
 
