@@ -14,7 +14,8 @@ func (e *Entrypoint) suggestionsFor(typedName string) (suggestions []Command) {
 
 	// Ignore errors when building up a list of suggestions
 	cmds, _ := e.Subcommands()
-	for _, cmd := range cmds.Flatten() {
+	fcmds, _ := cmds.Flatten()
+	for _, cmd := range fcmds {
 		usage := UsageRelativeTo(cmd, e)
 		if seen[usage] {
 			continue

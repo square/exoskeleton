@@ -102,10 +102,12 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 		d.discoverIn(fixtures, nil, &cmds)
 
 		var names []string
-		for _, cmd := range cmds.Flatten() {
+		all, errs := cmds.Flatten()
+		for _, cmd := range all {
 			names = append(names, Usage(cmd))
 		}
 
+		assert.Empty(t, errs)
 		assert.Equal(t, s.expected, names, "When maxDepth=%d", s.maxDepth)
 	}
 }
