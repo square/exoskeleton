@@ -13,5 +13,8 @@ type Module interface {
 	//
 	// For example, in the Go CLI, 'go mod' is a Module and its Subcommands would
 	// be 'download', 'edit', 'graph', 'init', 'tidy', 'vendor', 'verify', and 'why'.
-	Subcommands() Commands
+	//
+	// Returns a CommandError if the command does not fulfill the contract
+	// for providing its subcommands.
+	Subcommands() (Commands, error)
 }

@@ -13,13 +13,24 @@ func (c Commands) Find(cmdName string) Command {
 }
 
 // Flatten returns a list of commands, recursively replacing modules
-// with their subcommands.
-func (c Commands) Flatten() (all Commands) {
+// with their subcommands, along with any errors returned by modules'
+// Subcommands().
+func (c Commands) Flatten() (Commands, []error) {
+	all := Commands{}
+	errs := []error{}
+
 	for _, cmd := range c {
 		all = append(all, cmd)
 		if m, ok := cmd.(Module); ok {
-			all = append(all, m.Subcommands().Flatten()...)
+			subcmds, err := m.Subcommands()
+			if err != nil {
+				errs = append(errs, err)
+			}
+			fcmds, ferrs := subcmds.Flatten()
+			all = append(all, fcmds...)
+			errs = append(errs, ferrs...)
 		}
 	}
-	return
+
+	return all, errs
 }

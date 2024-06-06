@@ -102,10 +102,12 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 		d.discoverIn(fixtures, nil, &cmds)
 
 		var names []string
-		for _, cmd := range cmds.Flatten() {
+		all, errs := cmds.Flatten()
+		for _, cmd := range all {
 			names = append(names, Usage(cmd))
 		}
 
+		assert.Empty(t, errs)
 		assert.Equal(t, s.expected, names, "When maxDepth=%d", s.maxDepth)
 	}
 }
@@ -180,7 +182,9 @@ func TestFollowingSymlinks(t *testing.T) {
 	d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: 1}
 	d.discoverIn(fixtures, nil, &cmds)
 
-	cmd := cmds.Find("symlink-test").(Module).Subcommands().Find("hello-prime")
+	cmds, err := cmds.Find("symlink-test").(Module).Subcommands()
+	assert.NoError(t, err)
 
+	cmd := cmds.Find("hello-prime")
 	assert.FileExists(t, cmd.Path())
 }

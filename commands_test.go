@@ -30,5 +30,7 @@ func TestFlatten(t *testing.T) {
 	given := Commands{a, b}
 	expected := Commands{a, b, c, d, e}
 
-	assert.Equal(t, expected, given.Flatten())
+	cmds, errs := given.Flatten()
+	assert.Empty(t, errs)
+	assert.Equal(t, expected, cmds)
 }

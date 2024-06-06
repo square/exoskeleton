@@ -29,13 +29,24 @@ func (e *Entrypoint) completionsFor(args, env []string, completeArgs bool) ([]st
 	trimmedArgs := args[:len(args)-1]
 
 	// Find the real command for which completion must be performed
-	finalCmd, finalCmdArgs := e.Identify(trimmedArgs)
+	finalCmd, finalCmdArgs, err := e.Identify(trimmedArgs)
+	if err != nil {
+		return nil, shellcomp.DirectiveError, err
+	}
 
 	if _, isModule := finalCmd.(Module); !isModule && !completeArgs {
 		return nil, shellcomp.DirectiveNoFileComp, nil
 	}
 
 	return finalCmd.Complete(e, append(finalCmdArgs, toComplete), env)
+}
+
+func completionsForModule(m Module, args []string) ([]string, shellcomp.Directive, error) {
+	cmds, err := m.Subcommands()
+	if err != nil {
+		return nil, shellcomp.DirectiveError, err
+	}
+	return cmds.completionsFor(args)
 }
 
 func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, error) {

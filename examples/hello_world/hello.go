@@ -19,7 +19,10 @@ func main() {
 	}
 
 	// Identify the subcommand being invoked from the arguments.
-	cmd, args := cli.Identify(os.Args[1:])
+	cmd, args, err := cli.Identify(os.Args[1:])
+	if err != nil {
+		panic(err)
+	}
 
 	// Execute the subcommand.
 	err = cmd.Exec(cli, args, os.Environ())

@@ -83,7 +83,8 @@ func TestIdentify(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		cmd, rest := entrypoint.Identify(s.args)
+		cmd, rest, err := entrypoint.Identify(s.args)
+		assert.NoError(t, err, fmt.Sprintf("Identify(%v)", s.args))
 		assert.Equal(t, s.expectedCmd, cmd, fmt.Sprintf("Identify(%v)", s.args))
 		assert.Equal(t, s.expectedArgs, rest, fmt.Sprintf("Identify(%v)", s.args))
 	}

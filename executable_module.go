@@ -1,9 +1,6 @@
 package exoskeleton
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
 
@@ -15,7 +12,9 @@ type executableModule struct {
 
 func (m *executableModule) Summary() (string, error) {
 	if m.cmds == nil {
-		m.discover()
+		if err := m.discover(); err != nil {
+			return "", err
+		}
 	}
 
 	return m.summary, nil
@@ -26,50 +25,32 @@ func (m *executableModule) Exec(e *Entrypoint, args, env []string) error {
 }
 
 func (m *executableModule) Complete(_ *Entrypoint, args, _ []string) ([]string, shellcomp.Directive, error) {
-	return m.Subcommands().completionsFor(args)
+	return completionsForModule(m, args)
 }
 
-func (m *executableModule) Subcommands() Commands {
+func (m *executableModule) Subcommands() (Commands, error) {
 	if m.cmds == nil {
-		m.discover()
+		if err := m.discover(); err != nil {
+			return Commands{}, err
+		}
 	}
 
-	return m.cmds
+	return m.cmds, nil
 }
 
 // discover invokes an executable with `--describe-commands` and constructs a tree
 // of modules and subcommands (all to be invoked through the given executable)
 // from the JSON output.
-func (m *executableModule) discover() {
-	cmd := m.Command("--describe-commands")
-	cmd.Stderr = nil
-	output, err := cmd.Output()
+func (m *executableModule) discover() error {
+	descriptor, err := describeCommands(m)
 	if err != nil {
-		m.discoverer.onError(
-			CommandError{
-				Message: fmt.Sprintf("could not execute `%s --describe-commands`: %s", Usage(m), err.Error()),
-				Command: m,
-				Cause:   err,
-			},
-		)
-		return
-	}
-
-	var descriptor *commandDescriptor
-	if err := json.Unmarshal(output, &descriptor); err != nil {
-		m.discoverer.onError(
-			CommandError{
-				Message: fmt.Sprintf("could not parse output from `%s --describe-commands`: %s", Usage(m), err.Error()),
-				Command: m,
-				Cause:   err,
-			},
-		)
-		return
+		return err
 	}
 
 	m.name = descriptor.Name
 	m.summary = descriptor.Summary
 	m.cmds = m.discoverer.toCommands(m, descriptor.Commands, nil)
+	return nil
 }
 
 func (d *discoverer) toCommands(parent *executableModule, descriptors []*commandDescriptor, args []string) Commands {

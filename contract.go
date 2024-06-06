@@ -2,12 +2,145 @@ package exoskeleton
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"strings"
+
+	"github.com/square/exit"
 )
+
+// CommandError records an error that occurred with a command's implementation of its interface
+type CommandError struct {
+	Message string
+	Cause   error
+	Command Command
+}
+
+func (e CommandError) Error() string { return e.Message }
+func (e CommandError) Unwrap() error { return e.Cause }
+
+// CommandSummaryError indicates that a command did not properly implement the
+// interface for providing a summary
+type CommandSummaryError struct{ CommandError }
+
+// CommandHelpError indicates that a command did not properly implement the
+// interface for providing help
+type CommandHelpError struct{ CommandError }
+
+// CommandDescribeError indicates that an executable module did not properly
+// respond to `--describe-commands`
+type CommandDescribeError struct{ CommandError }
+
+func readSummaryFromModulefile(cmd *directoryModule) (string, error) {
+	var summary string
+
+	f, err := os.Open(cmd.path)
+	if err == nil {
+		defer f.Close()
+		summary, err = getMessageFromMagicComments(f, "summary")
+	}
+
+	if err != nil {
+		return "",
+			exit.Wrap(
+				CommandSummaryError{
+					CommandError{
+						Message: fmt.Sprintf("error reading %s: %s", cmd.path, err),
+						Command: cmd,
+						Cause:   err,
+					},
+				},
+				exit.InternalError,
+			)
+	}
+
+	return summary, nil
+}
+
+func readSummaryFromExecutable(cmd *executableCommand) (string, error) {
+	summary, err := getMessageFromCommand(cmd, "summary")
+
+	if err != nil {
+		return "",
+			exit.Wrap(
+				CommandSummaryError{
+					CommandError{
+						Message: fmt.Sprintf("error getting summary from %s: %s", cmd.path, err),
+						Command: cmd,
+						Cause:   err,
+					},
+				},
+				exit.InternalError,
+			)
+	}
+
+	return summary, nil
+}
+
+func readHelpFromExecutable(cmd *executableCommand, args []string) (string, error) {
+	var help string
+	var err error
+
+	if len(args) == 0 {
+		help, err = getMessageFromCommand(cmd, "help")
+	} else {
+		help, err = getMessageFromExecution(cmd, args, "help")
+	}
+
+	if err != nil {
+		return "",
+			exit.Wrap(
+				CommandHelpError{
+					CommandError{
+						Message: fmt.Sprintf("error getting help from %s: %s", cmd.path, err),
+						Command: cmd,
+						Cause:   err,
+					},
+				},
+				exit.InternalError,
+			)
+	}
+
+	return help, nil
+}
+
+func describeCommands(m *executableModule) (*commandDescriptor, error) {
+	cmd := m.Command("--describe-commands")
+	cmd.Stderr = nil
+	output, err := cmd.Output()
+	if err != nil {
+		return &commandDescriptor{},
+			exit.Wrap(
+				CommandDescribeError{
+					CommandError{
+						Message: fmt.Sprintf("error executing `%s --describe-commands`: %s", m.path, err),
+						Command: m,
+						Cause:   err,
+					},
+				},
+				exit.InternalError,
+			)
+	}
+
+	var descriptor *commandDescriptor
+	if err := json.Unmarshal(output, &descriptor); err != nil {
+		return &commandDescriptor{},
+			exit.Wrap(
+				CommandDescribeError{
+					CommandError{
+						Message: fmt.Sprintf("error parsing output from `%s --describe-commands`: %s", m.path, err),
+						Command: m,
+						Cause:   err,
+					},
+				},
+				exit.InternalError,
+			)
+	}
+
+	return descriptor, nil
+}
 
 // detectType reads the first two bytes from a file.
 // If they are `#!`, we can assume that the file is a shell script.
@@ -54,12 +187,12 @@ func getMessageFromCommand(cmd *executableCommand, message string) (string, erro
 	case script:
 		s, err := getMessageFromMagicComments(f, message)
 		if s == "" {
-			return getMessageFromExecution(cmd.Command("--" + message))
+			return getMessageFromExecution(cmd, nil, message)
 		} else {
 			return s, err
 		}
 	case binary:
-		return getMessageFromExecution(cmd.Command("--" + message))
+		return getMessageFromExecution(cmd, nil, message)
 	default:
 		return "", fmt.Errorf("Invalid value for t: %v", t)
 	}
@@ -134,21 +267,12 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 	}
 }
 
-func getMessageFromExecution(cmd *exec.Cmd) (string, error) {
+func getMessageFromExecution(c *executableCommand, args []string, message string) (string, error) {
+	cmd := c.Command(append(args, "--"+message)...)
 	cmd.Stderr = nil
 	out, err := cmd.Output()
 	if err != nil {
 		err = fmt.Errorf("failed to execute %s: %w", cmd.Path, err)
 	}
 	return strings.TrimRight(string(out), "\n"), err
-}
-
-func getMessageFromDir(path string, flag string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	return getMessageFromMagicComments(f, flag)
 }

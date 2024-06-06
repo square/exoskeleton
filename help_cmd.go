@@ -23,17 +23,11 @@ EXAMPLES
 
 // helpExec implements the 'help' command.
 func helpExec(e *Entrypoint, args, _ []string) error {
-	if cmd, rest := e.Identify(args); IsNull(cmd) {
+	if cmd, rest, err := e.Identify(args); err != nil {
+		return err
+	} else if IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
 	} else if help, err := e.helpFor(cmd, rest); err != nil {
-		e.onError(
-			CommandError{
-				Message: fmt.Sprintf("error getting help from %s: %s", Usage(cmd), err.Error()),
-				Command: cmd,
-				Cause:   err,
-			},
-		)
-
 		return err
 	} else {
 		printHelp(help)
@@ -43,7 +37,7 @@ func helpExec(e *Entrypoint, args, _ []string) error {
 
 func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
 	if m, ok := cmd.(Module); ok {
-		return e.buildModuleHelp(m, args), nil
+		return e.buildModuleHelp(m, args)
 	} else if p, ok := cmd.(helpWithArgsProvider); ok {
 		return p.helpWithArgs(args)
 	} else {
@@ -52,12 +46,16 @@ func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
 }
 
 func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
-	printHelp(e.buildModuleHelp(m, args))
-	return nil
+	help, err := e.buildModuleHelp(m, args)
+	printHelp(help)
+	return err
 }
 
-func (e *Entrypoint) buildModuleHelp(m Module, args []string) string {
-	cmds := m.Subcommands()
+func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
+	cmds, err := m.Subcommands()
+	if err != nil {
+		return "", err
+	}
 
 	var filteredArgs []string
 	var willExpandMenu bool
@@ -74,19 +72,26 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) string {
 	}
 
 	if willExpandMenu {
-		cmds = withoutModules(cmds.Flatten())
+		cmds = e.expandModules(cmds)
 	}
 
-	return e.buildMenu(cmds, m).String()
+	return e.buildMenu(cmds, m).String(), nil
 }
 
-func withoutModules(cmds Commands) (all []Command) {
-	for _, c := range cmds {
-		if _, ok := c.(Module); !ok {
-			all = append(all, c)
+func (e *Entrypoint) expandModules(cmds Commands) Commands {
+	all := Commands{}
+	for _, cmd := range cmds {
+		if m, ok := cmd.(Module); ok {
+			subcmds, err := m.Subcommands()
+			if err != nil {
+				e.onError(err)
+			}
+			all = append(all, e.expandModules(subcmds)...)
+		} else {
+			all = append(all, cmd)
 		}
 	}
-	return
+	return all
 }
 
 func printHelp(help string) {
