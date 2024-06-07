@@ -18,3 +18,10 @@ func IsModule(command Command) bool {
 	_, ok := command.(Module)
 	return ok
 }
+
+// IsExecutable returns true if the given Command is an external executable and false if it is not.
+func IsExecutable(command Command) bool {
+	_, isCmd := command.(*executableCommand)
+	_, isMod := command.(*executableModule)
+	return isCmd || isMod
+}
