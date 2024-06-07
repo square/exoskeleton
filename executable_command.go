@@ -44,7 +44,7 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 
 	var exitError *exec.ExitError
 	if errors.As(err, &exitError) {
-		return exit.Wrap(nil, exitError.ExitCode())
+		return exit.Wrap(err, exitError.ExitCode())
 	}
 
 	return err
