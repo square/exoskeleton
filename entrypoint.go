@@ -31,9 +31,6 @@ type Entrypoint struct {
 	cachePath                string
 	menuHeadingFor           MenuHeadingForFunc
 	moduleMetadataFilename   string
-	completeHelp             string
-	helpHelp                 string
-	whichHelp                string
 	errorCallbacks           []ErrorFunc
 	commandNotFoundCallbacks []CommandNotFoundFunc
 	cmdsToAppend             []Command
@@ -58,36 +55,40 @@ func New(paths []string, options ...Option) (*Entrypoint, error) {
 
 	self := newWithDefaults(path)
 
+	helpCmd := &EmbeddedCommand{
+		Name:     "help",
+		Exec:     HelpExec,
+		Complete: CompleteCommands,
+	}
+	whichCmd := &EmbeddedCommand{
+		Name:     "which",
+		Exec:     WhichExec,
+		Complete: CompleteCommands,
+	}
+	completeCmd := &EmbeddedCommand{
+		Name:     "complete",
+		Exec:     CompleteExec,
+		Complete: nil,
+	}
+
 	options =
 		append(
 			[]Option{
-				PrependCommands(
-					&EmbeddedCommand{
-						Name:     "help",
-						Help:     fmt.Sprintf(self.helpHelp, self.Name()),
-						Exec:     HelpExec,
-						Complete: CompleteCommands,
-					},
-					&EmbeddedCommand{
-						Name:     "which",
-						Help:     fmt.Sprintf(self.whichHelp, self.Name()),
-						Exec:     WhichExec,
-						Complete: CompleteCommands,
-					},
-					&EmbeddedCommand{
-						Name:     "complete",
-						Help:     fmt.Sprintf(self.completeHelp, self.Name()),
-						Exec:     CompleteExec,
-						Complete: nil,
-					},
-				),
+				PrependCommands(helpCmd, whichCmd, completeCmd),
 			},
+
+			// user-provided options may PrependCommands before these three.
 			options...,
 		)
 
 	for _, op := range options {
 		op.Apply(self)
 	}
+
+	// user-provided options may have overridden Name()
+	helpCmd.Help = fmt.Sprintf(HelpHelp, self.Name())
+	whichCmd.Help = fmt.Sprintf(WhichHelp, self.Name())
+	completeCmd.Help = fmt.Sprintf(CompleteHelp, self.Name())
 
 	self.cmds =
 		append(
@@ -116,9 +117,6 @@ func newWithDefaults(path string) *Entrypoint {
 		cachePath:              cachePath,
 		menuHeadingFor:         func(_ Module, _ Command) string { return "COMMANDS" },
 		moduleMetadataFilename: ".exoskeleton",
-		completeHelp:           CompleteHelp,
-		helpHelp:               HelpHelp,
-		whichHelp:              WhichHelp,
 		cmdsToPrepend:          []Command{},
 		cmdsToAppend:           []Command{},
 	}
