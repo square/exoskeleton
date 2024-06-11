@@ -93,6 +93,12 @@ func OnCommandNotFound(fn CommandNotFoundFunc) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.commandNotFoundCallbacks = append(e.commandNotFoundCallbacks, fn) })
 }
 
+// WithName sets the name of the entrypoint.
+// (By default, this is the basename of the executable.)
+func WithName(value string) Option {
+	return (optionFunc)(func(e *Entrypoint) { e.name = value })
+}
+
 // WithMaxDepth sets the maximum depth of the command tree.
 //
 // A value of 0 prohibits any submodules. All subcommands are leaves of the Entrypoint.
