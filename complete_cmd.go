@@ -29,8 +29,8 @@ COMPLETION DIRECTIVES
     8  Filter Files by Extension  The shell should use the provided completions as file extension filters
    16  Directories                The shell should provide file completions but only suggest directories`
 
-// completeExec implements the 'complete' command.
-func completeExec(e *Entrypoint, args, env []string) error {
+// CompleteExec implements the 'complete' command.
+func CompleteExec(e *Entrypoint, args, env []string) error {
 	completions, directive, err := e.completionsFor(args, env, true)
 
 	if err != nil {

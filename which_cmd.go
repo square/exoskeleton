@@ -23,8 +23,8 @@ EXAMPLES
    %[1]s which help       # Display the path to %[1]s
    %[1]s which foobar     # Display the path to the foobar command`
 
-// whichExec implements the 'which' command.
-func whichExec(e *Entrypoint, args, _ []string) error {
+// WhichExec implements the 'which' command.
+func WhichExec(e *Entrypoint, args, _ []string) error {
 	if cmd, _, err := e.Identify(args); err != nil {
 		return err
 	} else if IsNull(cmd) {

@@ -65,19 +65,19 @@ func New(paths []string, options ...Option) (*Entrypoint, error) {
 					&EmbeddedCommand{
 						Name:     "help",
 						Help:     fmt.Sprintf(self.helpHelp, self.Name()),
-						Exec:     helpExec,
+						Exec:     HelpExec,
 						Complete: CompleteCommands,
 					},
 					&EmbeddedCommand{
 						Name:     "which",
 						Help:     fmt.Sprintf(self.whichHelp, self.Name()),
-						Exec:     whichExec,
+						Exec:     WhichExec,
 						Complete: CompleteCommands,
 					},
 					&EmbeddedCommand{
 						Name:     "complete",
 						Help:     fmt.Sprintf(self.completeHelp, self.Name()),
-						Exec:     completeExec,
+						Exec:     CompleteExec,
 						Complete: nil,
 					},
 				),

@@ -21,8 +21,8 @@ EXAMPLES
    Expand modules and display a menu of all commands available
    $ %[1]s --all`
 
-// helpExec implements the 'help' command.
-func helpExec(e *Entrypoint, args, _ []string) error {
+// HelpExec implements the 'help' command.
+func HelpExec(e *Entrypoint, args, _ []string) error {
 	if cmd, rest, err := e.Identify(args); err != nil {
 		return err
 	} else if IsNull(cmd) {
