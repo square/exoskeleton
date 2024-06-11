@@ -120,18 +120,3 @@ func WithMenuHeadingFor(fn MenuHeadingForFunc) Option {
 func WithModuleMetadataFilename(value string) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.moduleMetadataFilename = value })
 }
-
-// WithHelpText allows you to override the help text for a built-in command.
-// There are three build-in commands: 'complete', 'help', and 'which'.
-func WithHelpText(command string, value string) Option {
-	switch command {
-	case `complete`:
-		return (optionFunc)(func(e *Entrypoint) { e.completeHelp = value })
-	case `help`:
-		return (optionFunc)(func(e *Entrypoint) { e.helpHelp = value })
-	case `which`:
-		return (optionFunc)(func(e *Entrypoint) { e.whichHelp = value })
-	default:
-		panic(`Invalid command: ` + command)
-	}
-}
