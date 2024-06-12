@@ -75,7 +75,7 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		cmds = e.expandModules(cmds)
 	}
 
-	return e.buildMenu(cmds, m).String(), nil
+	return e.MenuRelativeTo(cmds, m).String(), nil
 }
 
 func (e *Entrypoint) expandModules(cmds Commands) Commands {
