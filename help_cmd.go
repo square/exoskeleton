@@ -73,7 +73,11 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		cmds = e.expandModules(cmds)
 	}
 
-	return e.buildMenu(cmds, m).String(), nil
+	menu, errs := e.buildMenu(cmds, m)
+	for _, err := range errs {
+		e.onError(err)
+	}
+	return menu.String(), nil
 }
 
 func (e *Entrypoint) expandModules(cmds Commands) Commands {

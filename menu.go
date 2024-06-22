@@ -7,10 +7,11 @@ import (
 	"strings"
 )
 
-func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
+func (e *Entrypoint) buildMenu(c Commands, m Module) (menu, []error) {
 	usage := Usage(m) + " <command> [<args>]"
 
 	var items menuItems
+	var errs []error
 
 	seen := make(map[string]bool)
 	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
@@ -28,7 +29,7 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 		}
 
 		if summary, err := cache.Read(cmd); err != nil {
-			e.onError(err)
+			errs = append(errs, err)
 		} else if summary != "" {
 			heading := e.menuHeadingFor(m, cmd)
 			items = append(items, &menuItem{Name: name, Summary: summary, Heading: heading})
@@ -62,7 +63,7 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 		strings.TrimLeft(UsageRelativeTo(m, e)+" <command>", " "),
 	)
 
-	return menu{Usage: usage, Sections: sections, Trailer: trailer}
+	return menu{Usage: usage, Sections: sections, Trailer: trailer}, errs
 }
 
 type menu struct {
