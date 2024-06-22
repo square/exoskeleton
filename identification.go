@@ -14,14 +14,25 @@ import "strings"
 //
 // Returns a CommandError if the command does not fulfill the contract
 // for providing its subcommands.
-func (e *Entrypoint) Identify(rawArgs []string) (Command, []string, error) {
-	cmd, args, err := identify(e, normalizeArgs(rawArgs))
+func (e *Entrypoint) Identify(args []string) (Command, []string, error) {
+	// Recognize `--complete` as an alias for the built-in `complete` command.
+	if len(args) > 0 && args[0] == "--complete" {
+		return e.Identify(append([]string{"complete"}, args[1:]...))
+	}
+
+	cmd, rest, err := identify(e, args)
 
 	if IsNull(cmd) {
 		e.commandNotFound(cmd)
 	}
 
-	return cmd, args, err
+	// Recognize `--help` and `-h` as aliases for the built-in `help` command
+	// only when they immediately follow an identifiable command.
+	if !IsNull(cmd) && len(rest) > 0 && (rest[0] == "--help" || rest[0] == "-h") {
+		return e.Identify(append(append([]string{"help"}, argsRelativeTo(cmd, e)...), rest[1:]...))
+	}
+
+	return cmd, rest, err
 }
 
 // identify uses args to identify a Command and returns the command and the rest
@@ -50,31 +61,6 @@ func identify(m Module, args []string) (Command, []string, error) {
 	} else {
 		return cmd, rest, nil
 	}
-}
-
-// normalizeArgs rewrites `<command> -h` and `<command> --help` to `help <command>`.
-// It also treats `--complete <text>` as a synonym for `complete <text>` when the flag
-// is the first argument.
-func normalizeArgs(args []string) []string {
-	normalizedArgs := []string{}
-
-	for i, arg := range args {
-		if arg == "--" {
-			normalizedArgs = append(normalizedArgs, args[i:]...)
-			break
-
-		} else if arg == "-h" || arg == "--help" {
-			normalizedArgs = append([]string{"help"}, normalizedArgs...)
-
-		} else if arg == "--complete" && i == 0 {
-			normalizedArgs = append([]string{"complete"}, normalizedArgs...)
-
-		} else {
-			normalizedArgs = append(normalizedArgs, arg)
-		}
-	}
-
-	return normalizedArgs
 }
 
 func isFlag(s string) bool {

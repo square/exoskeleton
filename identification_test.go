@@ -69,19 +69,26 @@ func TestIdentify(t *testing.T) {
 
 		// Normalizes `CMD --help` to `help CMD`
 		{[]string{"--help"}, help, []string{}},
+		{[]string{"--help", "--flag"}, help, []string{"--flag"}},
 		{[]string{"a", "--help"}, help, []string{"a"}},
 		{[]string{"b", "c", "--help"}, help, []string{"b", "c"}},
-		{[]string{"b:c", "--help"}, help, []string{"b:c"}},
+		{[]string{"b:c", "--help"}, help, []string{"b", "c"}},
 
 		// Normalizes `CMD -h` to `help CMD`
 		{[]string{"-h"}, help, []string{}},
+		{[]string{"-h", "--flag"}, help, []string{"--flag"}},
 		{[]string{"a", "-h"}, help, []string{"a"}},
 		{[]string{"b", "c", "-h"}, help, []string{"b", "c"}},
-		{[]string{"b:c", "-h"}, help, []string{"b:c"}},
+		{[]string{"b:c", "-h"}, help, []string{"b", "c"}},
 
 		// Does not normalize `--help`/`-h` after `--`
 		{[]string{"a", "--", "--help"}, a, []string{"--", "--help"}},
 		{[]string{"a", "--", "-h"}, a, []string{"--", "-h"}},
+
+		// Does not normalize `CMD <arg> -h` to `help CMD <arg>`
+		{[]string{"x", "-h"}, nullCommand{entrypoint, "x"}, []string{"-h"}},
+		{[]string{"a", "arg", "-h"}, a, []string{"arg", "-h"}},
+		{[]string{"b", "c", "arg", "-h"}, c, []string{"arg", "-h"}},
 	}
 
 	for _, s := range scenarios {
