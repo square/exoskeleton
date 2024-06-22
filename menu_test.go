@@ -16,8 +16,11 @@ func TestBuildMenuUsage(t *testing.T) {
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	assert.Equal(t, "entrypoint <command> [<args>]", entrypoint.buildMenu(entrypoint.cmds, entrypoint).Usage)
-	assert.Equal(t, "entrypoint module <command> [<args>]", entrypoint.buildMenu(module.cmds, module).Usage)
+	menu, _ := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	assert.Equal(t, "entrypoint <command> [<args>]", menu.Usage)
+
+	menu, _ = entrypoint.buildMenu(module.cmds, module)
+	assert.Equal(t, "entrypoint module <command> [<args>]", menu.Usage)
 }
 
 func TestBuildMenuTrailer(t *testing.T) {
@@ -25,13 +28,11 @@ func TestBuildMenuTrailer(t *testing.T) {
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	assert.Equal(t,
-		"Run \033[96mentrypoint help <command>\033[0m to print information on a specific command.",
-		entrypoint.buildMenu(entrypoint.cmds, entrypoint).Trailer)
+	menu, _ := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	assert.Equal(t, "Run \033[96mentrypoint help <command>\033[0m to print information on a specific command.", menu.Trailer)
 
-	assert.Equal(t,
-		"Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.",
-		entrypoint.buildMenu(module.cmds, module).Trailer)
+	menu, _ = entrypoint.buildMenu(module.cmds, module)
+	assert.Equal(t, "Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.", menu.Trailer)
 }
 
 func TestBuildMenuSectionsUncached(t *testing.T) {
@@ -41,6 +42,8 @@ func TestBuildMenuSectionsUncached(t *testing.T) {
 		t.Error(err)
 	}
 
+	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	assert.Empty(t, errs)
 	assert.Equal(t,
 		`COMMANDS
    echoargs  Echoes the args it received
@@ -49,7 +52,7 @@ func TestBuildMenuSectionsUncached(t *testing.T) {
    go:       Provides several commands
    hello     Prints "hello"
    suggest   Suggests arguments`,
-		nocolor(entrypoint.buildMenu(entrypoint.cmds, entrypoint).Sections.String()))
+		nocolor(menu.Sections.String()))
 }
 
 func TestBuildMenuSectionsReadFromCache(t *testing.T) {
@@ -69,9 +72,9 @@ func TestBuildMenuSectionsReadFromCache(t *testing.T) {
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"CACHED SUMMARY"}}}`, modTime)))
 	entrypoint.cachePath = f.Name()
 
-	assert.Equal(t,
-		"COMMANDS\n   echoargs  CACHED SUMMARY",
-		nocolor(entrypoint.buildMenu(entrypoint.cmds, entrypoint).Sections.String()))
+	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	assert.Empty(t, errs)
+	assert.Equal(t, "COMMANDS\n   echoargs  CACHED SUMMARY", nocolor(menu.Sections.String()))
 }
 
 func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
@@ -91,9 +94,9 @@ func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"STALE SUMMARY"}}}`, modTime-1)))
 	entrypoint.cachePath = f.Name()
 
-	assert.Equal(t,
-		"COMMANDS\n   echoargs  Echoes the args it received",
-		nocolor(entrypoint.buildMenu(entrypoint.cmds, entrypoint).Sections.String()))
+	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	assert.Empty(t, errs)
+	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", nocolor(menu.Sections.String()))
 
 	f.Seek(0, 0)
 	buf := new(bytes.Buffer)
@@ -119,9 +122,9 @@ func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
 	f.Write([]byte(`{"summary":{}`))
 	entrypoint.cachePath = f.Name()
 
-	assert.Equal(t,
-		"COMMANDS\n   echoargs  Echoes the args it received",
-		nocolor(entrypoint.buildMenu(entrypoint.cmds, entrypoint).Sections.String()))
+	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	assert.Empty(t, errs)
+	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", nocolor(menu.Sections.String()))
 
 	f.Seek(0, 0)
 	buf := new(bytes.Buffer)
