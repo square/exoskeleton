@@ -7,24 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNormalizeArgs(t *testing.T) {
-	scenarios := []struct {
-		rawArgs      []string
-		expectedArgs []string
-		memo         string
-	}{
-		{[]string{}, []string{}, "Does nothing to empty arguments"},
-		{[]string{"ssh"}, []string{"ssh"}, "Does nothing to plain arguments"},
-		{[]string{"ssh", "--help"}, []string{"help", "ssh"}, "Normalizes `xyz --help` to `help xyz`"},
-		{[]string{"ssh", "-h"}, []string{"help", "ssh"}, "Normalizes `xyz -h` to `help xyz`"},
-		{[]string{"ssh", "--", "--help"}, []string{"ssh", "--", "--help"}, "Leaves `--help` alone after `--`"},
-	}
-
-	for _, s := range scenarios {
-		assert.Equal(t, s.expectedArgs, normalizeArgs(s.rawArgs), s.memo)
-	}
-}
-
 func TestIdentify(t *testing.T) {
 	// all
 	// ├── a
@@ -44,7 +26,8 @@ func TestIdentify(t *testing.T) {
 	overloaded_a := &executableCommand{name: "a"}
 
 	help := &builtinCommand{definition: &EmbeddedCommand{Name: `help`}}
-	entrypoint := &Entrypoint{cmds: Commands{help, a, b, overloaded_a}}
+	complete := &builtinCommand{definition: &EmbeddedCommand{Name: `complete`}}
+	entrypoint := &Entrypoint{cmds: Commands{help, complete, a, b, overloaded_a}}
 
 	scenarios := []struct {
 		args         []string
@@ -80,6 +63,25 @@ func TestIdentify(t *testing.T) {
 
 		// Can invoke a module with a trailing colon
 		{[]string{"b:"}, b, []string{}},
+
+		// Identifies `--complete` as `complete`
+		{[]string{"--complete"}, complete, []string{}},
+
+		// Normalizes `CMD --help` to `help CMD`
+		{[]string{"--help"}, help, []string{}},
+		{[]string{"a", "--help"}, help, []string{"a"}},
+		{[]string{"b", "c", "--help"}, help, []string{"b", "c"}},
+		{[]string{"b:c", "--help"}, help, []string{"b:c"}},
+
+		// Normalizes `CMD -h` to `help CMD`
+		{[]string{"-h"}, help, []string{}},
+		{[]string{"a", "-h"}, help, []string{"a"}},
+		{[]string{"b", "c", "-h"}, help, []string{"b", "c"}},
+		{[]string{"b:c", "-h"}, help, []string{"b:c"}},
+
+		// Does not normalize `--help`/`-h` after `--`
+		{[]string{"a", "--", "--help"}, a, []string{"--", "--help"}},
+		{[]string{"a", "--", "-h"}, a, []string{"--", "-h"}},
 	}
 
 	for _, s := range scenarios {
