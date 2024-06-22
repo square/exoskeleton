@@ -128,7 +128,7 @@ func (e *Entrypoint) onError(err error) {
 	}
 }
 
-func (e *Entrypoint) commandNotFound(cmd nullCommand) {
+func (e *Entrypoint) commandNotFound(cmd Command) {
 	for _, callback := range e.commandNotFoundCallbacks {
 		callback(e, cmd)
 	}

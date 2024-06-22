@@ -17,8 +17,8 @@ import "strings"
 func (e *Entrypoint) Identify(rawArgs []string) (Command, []string, error) {
 	cmd, args, err := identify(e, normalizeArgs(rawArgs))
 
-	if n, ok := cmd.(nullCommand); ok {
-		e.commandNotFound(n)
+	if IsNull(cmd) {
+		e.commandNotFound(cmd)
 	}
 
 	return cmd, args, err
