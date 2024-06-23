@@ -10,11 +10,12 @@ import (
 type SummaryFunc func(Command) (string, error)
 
 type buildMenuOptions struct {
+	Depth      int
 	HeadingFor MenuHeadingForFunc
 	SummaryFor SummaryFunc
 }
 
-func buildMenu(c Commands, m Module, opts *buildMenuOptions) (menu, []error) {
+func buildMenu(m Module, opts *buildMenuOptions) (*menu, []error) {
 	if opts.SummaryFor == nil {
 		opts.SummaryFor = func(cmd Command) (string, error) { return cmd.Summary() }
 	}
@@ -23,11 +24,13 @@ func buildMenu(c Commands, m Module, opts *buildMenuOptions) (menu, []error) {
 		opts.HeadingFor = func(Module, Command) string { return "COMMANDS" }
 	}
 
-	usage := Usage(m) + " <command> [<args>]"
+	c, err := m.Subcommands()
+	if err != nil {
+		return &menu{}, []error{err}
+	}
 
+	c, errs := expandModules(c, opts.Depth)
 	var items menuItems
-	var errs []error
-
 	seen := make(map[string]bool)
 
 	for _, cmd := range c {
@@ -73,8 +76,30 @@ func buildMenu(c Commands, m Module, opts *buildMenuOptions) (menu, []error) {
 
 	a := argsRelativeTo(m, nil)
 	helpUsage := strings.Join(append([]string{a[0], "help"}, a[1:]...), " ")
+	usage := Usage(m) + " <command> [<args>]"
 
-	return menu{Usage: usage, Sections: sections, HelpUsage: helpUsage}, errs
+	return &menu{Usage: usage, Sections: sections, HelpUsage: helpUsage}, errs
+}
+
+func expandModules(cmds Commands, depth int) (Commands, []error) {
+	all := Commands{}
+	var errs []error
+
+	for _, cmd := range cmds {
+		if m, ok := cmd.(Module); ok && depth != 0 {
+			subcmds, err := m.Subcommands()
+			if err != nil {
+				errs = append(errs, err)
+			}
+			expandedSubcmds, expansionErrs := expandModules(subcmds, depth-1)
+			all = append(all, expandedSubcmds...)
+			errs = append(errs, expansionErrs...)
+		} else {
+			all = append(all, cmd)
+		}
+	}
+
+	return all, errs
 }
 
 type menu struct {
