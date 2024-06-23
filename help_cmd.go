@@ -50,27 +50,9 @@ func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
 }
 
 func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
-	cmds, err := m.Subcommands()
-	if err != nil {
+	// If `Subcommands()` will return an error, return early
+	if _, err := m.Subcommands(); err != nil {
 		return "", err
-	}
-
-	var filteredArgs []string
-	var willExpandMenu bool
-
-	for i, arg := range args {
-		if arg == "--" {
-			filteredArgs = append(filteredArgs, args[i:]...)
-			break
-		} else if arg == "--all" || arg == "-a" {
-			willExpandMenu = true
-		} else {
-			filteredArgs = append(filteredArgs, arg)
-		}
-	}
-
-	if willExpandMenu {
-		cmds = e.expandModules(cmds)
 	}
 
 	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
@@ -79,27 +61,19 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		SummaryFor: cache.Read,
 	}
 
-	menu, errs := buildMenu(cmds, m, opts)
+	for _, arg := range args {
+		if arg == "--" {
+			break
+		} else if arg == "--all" || arg == "-a" {
+			opts.Depth = -1
+		}
+	}
+
+	menu, errs := buildMenu(m, opts)
 	for _, err := range errs {
 		e.onError(err)
 	}
 	return menu.String(), nil
-}
-
-func (e *Entrypoint) expandModules(cmds Commands) Commands {
-	all := Commands{}
-	for _, cmd := range cmds {
-		if m, ok := cmd.(Module); ok {
-			subcmds, err := m.Subcommands()
-			if err != nil {
-				e.onError(err)
-			}
-			all = append(all, e.expandModules(subcmds)...)
-		} else {
-			all = append(all, cmd)
-		}
-	}
-	return all
 }
 
 func printHelp(help string) {
