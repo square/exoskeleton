@@ -73,7 +73,13 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		cmds = e.expandModules(cmds)
 	}
 
-	menu, errs := e.buildMenu(cmds, m)
+	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
+	opts := &buildMenuOptions{
+		HeadingFor: e.menuHeadingFor,
+		SummaryFor: cache.Read,
+	}
+
+	menu, errs := buildMenu(cmds, m, opts)
 	for _, err := range errs {
 		e.onError(err)
 	}

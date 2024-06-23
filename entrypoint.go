@@ -115,7 +115,6 @@ func newWithDefaults(path string) *Entrypoint {
 		name:                   name,
 		maxDepth:               -1,
 		cachePath:              cachePath,
-		menuHeadingFor:         func(_ Module, _ Command) string { return "COMMANDS" },
 		moduleMetadataFilename: ".exoskeleton",
 		cmdsToPrepend:          []Command{},
 		cmdsToAppend:           []Command{},
