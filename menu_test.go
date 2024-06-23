@@ -16,10 +16,10 @@ func TestBuildMenuUsage(t *testing.T) {
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	menu, _ := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	menu, _ := buildMenu(entrypoint.cmds, entrypoint, &buildMenuOptions{})
 	assert.Equal(t, "entrypoint <command> [<args>]", menu.Usage)
 
-	menu, _ = entrypoint.buildMenu(module.cmds, module)
+	menu, _ = buildMenu(module.cmds, module, &buildMenuOptions{})
 	assert.Equal(t, "entrypoint module <command> [<args>]", menu.Usage)
 }
 
@@ -28,11 +28,11 @@ func TestBuildMenuTrailer(t *testing.T) {
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	menu, _ := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
-	assert.Equal(t, "Run \033[96mentrypoint help <command>\033[0m to print information on a specific command.", menu.Trailer)
+	menu, _ := buildMenu(entrypoint.cmds, entrypoint, &buildMenuOptions{})
+	assert.Contains(t, menu.String(), "Run \033[96mentrypoint help <command>\033[0m to print information on a specific command.")
 
-	menu, _ = entrypoint.buildMenu(module.cmds, module)
-	assert.Equal(t, "Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.", menu.Trailer)
+	menu, _ = buildMenu(module.cmds, module, &buildMenuOptions{})
+	assert.Contains(t, menu.String(), "Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.")
 }
 
 func TestBuildMenuSectionsUncached(t *testing.T) {
@@ -42,7 +42,7 @@ func TestBuildMenuSectionsUncached(t *testing.T) {
 		t.Error(err)
 	}
 
-	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	menu, errs := buildMenu(entrypoint.cmds, entrypoint, &buildMenuOptions{})
 	assert.Empty(t, errs)
 	assert.Equal(t,
 		`COMMANDS
@@ -70,9 +70,9 @@ func TestBuildMenuSectionsReadFromCache(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"CACHED SUMMARY"}}}`, modTime)))
-	entrypoint.cachePath = f.Name()
+	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	menu, errs := buildMenu(entrypoint.cmds, entrypoint, &buildMenuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
 	assert.Equal(t, "COMMANDS\n   echoargs  CACHED SUMMARY", nocolor(menu.Sections.String()))
 }
@@ -92,9 +92,9 @@ func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"STALE SUMMARY"}}}`, modTime-1)))
-	entrypoint.cachePath = f.Name()
+	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	menu, errs := buildMenu(entrypoint.cmds, entrypoint, &buildMenuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
 	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", nocolor(menu.Sections.String()))
 
@@ -120,9 +120,9 @@ func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 	f.Write([]byte(`{"summary":{}`))
-	entrypoint.cachePath = f.Name()
+	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := entrypoint.buildMenu(entrypoint.cmds, entrypoint)
+	menu, errs := buildMenu(entrypoint.cmds, entrypoint, &buildMenuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
 	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", nocolor(menu.Sections.String()))
 

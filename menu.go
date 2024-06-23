@@ -7,14 +7,28 @@ import (
 	"strings"
 )
 
-func (e *Entrypoint) buildMenu(c Commands, m Module) (menu, []error) {
+type SummaryFunc func(Command) (string, error)
+
+type buildMenuOptions struct {
+	HeadingFor MenuHeadingForFunc
+	SummaryFor SummaryFunc
+}
+
+func buildMenu(c Commands, m Module, opts *buildMenuOptions) (menu, []error) {
+	if opts.SummaryFor == nil {
+		opts.SummaryFor = func(cmd Command) (string, error) { return cmd.Summary() }
+	}
+
+	if opts.HeadingFor == nil {
+		opts.HeadingFor = func(Module, Command) string { return "COMMANDS" }
+	}
+
 	usage := Usage(m) + " <command> [<args>]"
 
 	var items menuItems
 	var errs []error
 
 	seen := make(map[string]bool)
-	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
 
 	for _, cmd := range c {
 		name := UsageRelativeTo(cmd, m)
@@ -28,10 +42,10 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) (menu, []error) {
 			seen[name] = true
 		}
 
-		if summary, err := cache.Read(cmd); err != nil {
+		if summary, err := opts.SummaryFor(cmd); err != nil {
 			errs = append(errs, err)
 		} else if summary != "" {
-			heading := e.menuHeadingFor(m, cmd)
+			heading := opts.HeadingFor(m, cmd)
 			items = append(items, &menuItem{Name: name, Summary: summary, Heading: heading})
 		}
 	}
@@ -57,23 +71,20 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) (menu, []error) {
 		}
 	}
 
-	trailer := fmt.Sprintf(
-		"Run \033[96m%s help %s\033[0m to print information on a specific command.",
-		Usage(e),
-		strings.TrimLeft(UsageRelativeTo(m, e)+" <command>", " "),
-	)
+	a := argsRelativeTo(m, nil)
+	helpUsage := strings.Join(append([]string{a[0], "help"}, a[1:]...), " ")
 
-	return menu{Usage: usage, Sections: sections, Trailer: trailer}, errs
+	return menu{Usage: usage, Sections: sections, HelpUsage: helpUsage}, errs
 }
 
 type menu struct {
-	Usage    string
-	Sections menuSections
-	Trailer  string
+	Usage     string
+	HelpUsage string
+	Sections  menuSections
 }
 
 func (m menu) String() string {
-	return fmt.Sprintf("USAGE\n   %s\n\n%s\n\n%s", m.Usage, m.Sections, m.Trailer)
+	return fmt.Sprintf("USAGE\n   %s\n\n%s\n\nRun \033[96m%s <command>\033[0m to print information on a specific command.", m.Usage, m.Sections, m.HelpUsage)
 }
 
 type menuSections []menuSection
