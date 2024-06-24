@@ -55,10 +55,8 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		return "", err
 	}
 
-	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
 	opts := &MenuOptions{
 		HeadingFor: e.menuHeadingFor,
-		SummaryFor: cache.Read,
 		Template:   e.menuTemplate,
 	}
 
