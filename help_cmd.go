@@ -70,7 +70,7 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		}
 	}
 
-	s, errs := menuFor(m, opts)
+	s, errs := MenuFor(m, opts)
 	for _, err := range errs {
 		e.onError(err)
 	}

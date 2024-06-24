@@ -89,8 +89,8 @@ type MenuItem struct {
 	Width   int
 }
 
-// menuFor renders a menu of commands for a Module.
-func menuFor(m Module, opts *MenuOptions) (string, []error) {
+// MenuFor renders a menu of commands for a Module.
+func MenuFor(m Module, opts *MenuOptions) (string, []error) {
 	if opts.Template == nil {
 		opts.Template = template.Must(template.New("menu").Funcs(templateFuncs).Parse(menuTemplate))
 	}
