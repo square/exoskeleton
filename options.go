@@ -1,6 +1,10 @@
 package exoskeleton
 
-import "github.com/square/exoskeleton/pkg/shellcomp"
+import (
+	"text/template"
+
+	"github.com/square/exoskeleton/pkg/shellcomp"
+)
 
 // An Option applies optional changes to an Exoskeleton Entrypoint.
 type Option interface {
@@ -113,6 +117,12 @@ func WithMaxDepth(value int) Option {
 // a Command should be listed under in the main menu.
 func WithMenuHeadingFor(fn MenuHeadingForFunc) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.menuHeadingFor = fn })
+}
+
+// WithMenuTemplate sets the template that will be used to render help for modules.
+// The template will be executed with an instance of exoskeleton.Menu as its data.
+func WithMenuTemplate(value *template.Template) Option {
+	return (optionFunc)(func(e *Entrypoint) { e.menuTemplate = value })
 }
 
 // WithModuleMetadataFilename sets the filename to use for module metadata.

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,26 +17,26 @@ func TestBuildMenuUsage(t *testing.T) {
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	menu, _ := buildMenu(entrypoint, &buildMenuOptions{})
+	menu, _ := buildMenu(entrypoint, &menuOptions{})
 	assert.Equal(t, "entrypoint <command> [<args>]", menu.Usage)
 
-	menu, _ = buildMenu(module, &buildMenuOptions{})
+	menu, _ = buildMenu(module, &menuOptions{})
 	assert.Equal(t, "entrypoint module <command> [<args>]", menu.Usage)
 }
 
-func TestBuildMenuTrailer(t *testing.T) {
+func TestMenuForTrailer(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	menu, _ := buildMenu(entrypoint, &buildMenuOptions{})
-	assert.Contains(t, menu.String(), "Run \033[96mentrypoint help <command>\033[0m to print information on a specific command.")
+	menu, _ := menuFor(entrypoint, &menuOptions{})
+	assert.Contains(t, menu, "Run \033[96mentrypoint help <command>\033[0m to print information on a specific command.")
 
-	menu, _ = buildMenu(module, &buildMenuOptions{})
-	assert.Contains(t, menu.String(), "Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.")
+	menu, _ = menuFor(module, &menuOptions{})
+	assert.Contains(t, menu, "Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.")
 }
 
-func TestBuildMenuSectionsUncached(t *testing.T) {
+func TestMenuForSectionsUncached(t *testing.T) {
 	entrypoint, err := New([]string{fixtures})
 	entrypoint.cachePath = ""
 	if err != nil {
@@ -94,13 +95,13 @@ func TestBuildMenuSectionsUncached(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		menu, errs := buildMenu(entrypoint, &buildMenuOptions{Depth: s.depth})
+		menu, errs := menuFor(entrypoint, &menuOptions{Depth: s.depth})
 		assert.Empty(t, errs)
-		assert.Equal(t, s.expected, nocolor(menu.Sections.String()), "Given depth=%d", s.depth)
+		assert.Equal(t, s.expected, sections(nocolor(menu)), "Given depth=%d", s.depth)
 	}
 }
 
-func TestBuildMenuSectionsReadFromCache(t *testing.T) {
+func TestMenuForSectionsReadFromCache(t *testing.T) {
 	entrypoint := newWithDefaults("/entrypoint")
 	cmd := &executableCommand{parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
 	modTime, err := modTime(cmd)
@@ -117,12 +118,12 @@ func TestBuildMenuSectionsReadFromCache(t *testing.T) {
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"CACHED SUMMARY"}}}`, modTime)))
 	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := buildMenu(entrypoint, &buildMenuOptions{SummaryFor: cache.Read})
+	menu, errs := menuFor(entrypoint, &menuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
-	assert.Equal(t, "COMMANDS\n   echoargs  CACHED SUMMARY", nocolor(menu.Sections.String()))
+	assert.Equal(t, "COMMANDS\n   echoargs  CACHED SUMMARY", sections(nocolor(menu)))
 }
 
-func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
+func TestMenuForSectionsWriteToCacheWhenStale(t *testing.T) {
 	entrypoint := newWithDefaults("/entrypoint")
 	cmd := &executableCommand{parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
 	modTime, err := modTime(cmd)
@@ -139,9 +140,9 @@ func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"STALE SUMMARY"}}}`, modTime-1)))
 	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := buildMenu(entrypoint, &buildMenuOptions{SummaryFor: cache.Read})
+	menu, errs := menuFor(entrypoint, &menuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
-	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", nocolor(menu.Sections.String()))
+	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", sections(nocolor(menu)))
 
 	f.Seek(0, 0)
 	buf := new(bytes.Buffer)
@@ -150,7 +151,7 @@ func TestBuildMenuSectionsWriteToCacheWhenStale(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"Echoes the args it received"}}}`, modTime), buf.String())
 }
 
-func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
+func TestMenuForSectionsWriteToCacheWhenMissing(t *testing.T) {
 	entrypoint := newWithDefaults("/entrypoint")
 	cmd := &executableCommand{parent: entrypoint, path: filepath.Join(fixtures, "echoargs"), name: "echoargs"}
 	modTime, err := modTime(cmd)
@@ -167,9 +168,9 @@ func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
 	f.Write([]byte(`{"summary":{}`))
 	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := buildMenu(entrypoint, &buildMenuOptions{SummaryFor: cache.Read})
+	menu, errs := menuFor(entrypoint, &menuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
-	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", nocolor(menu.Sections.String()))
+	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", sections(nocolor(menu)))
 
 	f.Seek(0, 0)
 	buf := new(bytes.Buffer)
@@ -182,4 +183,9 @@ func TestBuildMenuSectionsWriteToCacheWhenMissing(t *testing.T) {
 func nocolor(s string) string {
 	re := regexp.MustCompile("\033\\[[;\\d]+m")
 	return re.ReplaceAllLiteralString(s, "")
+}
+
+func sections(s string) string {
+	lines := strings.SplitAfter(s, "\n")
+	return strings.TrimRight(strings.Join(lines[3:(len(lines)-1)], ""), "\n")
 }

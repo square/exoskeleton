@@ -56,9 +56,10 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 	}
 
 	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
-	opts := &buildMenuOptions{
+	opts := &menuOptions{
 		HeadingFor: e.menuHeadingFor,
 		SummaryFor: cache.Read,
+		Template:   e.menuTemplate,
 	}
 
 	for _, arg := range args {
@@ -69,11 +70,11 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		}
 	}
 
-	menu, errs := buildMenu(m, opts)
+	menu, errs := menuFor(m, opts)
 	for _, err := range errs {
 		e.onError(err)
 	}
-	return menu.String(), nil
+	return menu, nil
 }
 
 func printHelp(help string) {
