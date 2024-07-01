@@ -79,15 +79,8 @@ func readSummaryFromExecutable(cmd *executableCommand) (string, error) {
 	return summary, nil
 }
 
-func readHelpFromExecutable(cmd *executableCommand, args []string) (string, error) {
-	var help string
-	var err error
-
-	if len(args) == 0 {
-		help, err = getMessageFromCommand(cmd, "help")
-	} else {
-		help, err = getMessageFromExecution(cmd, args, "help")
-	}
+func readHelpFromExecutable(cmd *executableCommand) (string, error) {
+	help, err := getMessageFromCommand(cmd, "help")
 
 	if err != nil {
 		return "",
@@ -187,12 +180,12 @@ func getMessageFromCommand(cmd *executableCommand, message string) (string, erro
 	case script:
 		s, err := getMessageFromMagicComments(f, message)
 		if s == "" {
-			return getMessageFromExecution(cmd, nil, message)
+			return getMessageFromExecution(cmd, message)
 		} else {
 			return s, err
 		}
 	case binary:
-		return getMessageFromExecution(cmd, nil, message)
+		return getMessageFromExecution(cmd, message)
 	default:
 		return "", fmt.Errorf("Invalid value for t: %v", t)
 	}
@@ -267,8 +260,8 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 	}
 }
 
-func getMessageFromExecution(c *executableCommand, args []string, message string) (string, error) {
-	cmd := c.Command(append(args, "--"+message)...)
+func getMessageFromExecution(c *executableCommand, message string) (string, error) {
+	cmd := c.Command("--" + message)
 	cmd.Stderr = nil
 	out, err := cmd.Output()
 	if err != nil {

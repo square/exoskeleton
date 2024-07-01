@@ -38,8 +38,6 @@ func HelpExec(e *Entrypoint, args, _ []string) error {
 func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
 	if m, ok := cmd.(Module); ok {
 		return e.buildModuleHelp(m, args)
-	} else if p, ok := cmd.(helpWithArgsProvider); ok {
-		return p.helpWithArgs(args)
 	} else {
 		return cmd.Help()
 	}
