@@ -44,8 +44,6 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 				"nested-1",
 				"nested-1 hello",
 				"suggest",
-				"symlink-test",
-				"symlink-test hello-prime",
 			},
 		},
 		{
@@ -65,8 +63,6 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 				"nested-1 nested-2",
 				"nested-1 nested-2 hello",
 				"suggest",
-				"symlink-test",
-				"symlink-test hello-prime",
 			},
 		},
 		{
@@ -90,8 +86,6 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 				"nested-1 nested-2 nested-3 nested-4",
 				"nested-1 nested-2 nested-3 nested-4 hello",
 				"suggest",
-				"symlink-test",
-				"symlink-test hello-prime",
 			},
 		},
 	}
@@ -180,7 +174,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 func TestFollowingSymlinks(t *testing.T) {
 	var cmds Commands
 	d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: 1}
-	d.discoverIn(fixtures, nil, &cmds)
+	d.discoverIn(filepath.Join(fixtures, "edge-cases"), nil, &cmds)
 
 	cmds, err := cmds.Find("symlink-test").(Module).Subcommands()
 	assert.NoError(t, err)

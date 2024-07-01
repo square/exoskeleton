@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
@@ -30,6 +31,7 @@ type Entrypoint struct {
 	maxDepth                 int
 	cachePath                string
 	menuHeadingFor           MenuHeadingForFunc
+	menuTemplate             *template.Template
 	moduleMetadataFilename   string
 	errorCallbacks           []ErrorFunc
 	commandNotFoundCallbacks []CommandNotFoundFunc
@@ -115,7 +117,6 @@ func newWithDefaults(path string) *Entrypoint {
 		name:                   name,
 		maxDepth:               -1,
 		cachePath:              cachePath,
-		menuHeadingFor:         func(_ Module, _ Command) string { return "COMMANDS" },
 		moduleMetadataFilename: ".exoskeleton",
 		cmdsToPrepend:          []Command{},
 		cmdsToAppend:           []Command{},
