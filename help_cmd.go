@@ -56,7 +56,7 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 	}
 
 	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
-	opts := &menuOptions{
+	opts := &MenuOptions{
 		HeadingFor: e.menuHeadingFor,
 		SummaryFor: cache.Read,
 		Template:   e.menuTemplate,
@@ -70,7 +70,7 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		}
 	}
 
-	menu, errs := menuFor(m, opts)
+	menu, errs := MenuFor(m, opts)
 	for _, err := range errs {
 		e.onError(err)
 	}

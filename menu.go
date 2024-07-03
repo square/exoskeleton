@@ -28,11 +28,27 @@ var templateFuncs = template.FuncMap{
 // SummaryFunc is a function that is expected to return the heading
 type SummaryFunc func(Command) (string, error)
 
-type menuOptions struct {
-	Depth      int
+// MenuOptions are the options that control how menus are constructed for modules.
+type MenuOptions struct {
+	// Depth describes how recursively a menu should be constructed. Its default
+	// value is 0, which indicates that the menu should list only the commands
+	// that are descendants of the module. A value of 1 would list descendants one
+	// level deep, a value of 2 would list descendants two levels deep, etc. A value
+	// -1 lists all descendants.
+	Depth int
+
+	// HeadingFor accepts a Command the Module the menu is being prepared for
+	// and returns a string to use as a section heading for the Command.
+	// The default function returns "COMMANDS".
 	HeadingFor MenuHeadingForFunc
+
+	// SummaryFor accepts a Command and returns its summary and, optionally, an error.
+	// The default function invokes Summary() on the provided Command.
 	SummaryFor SummaryFunc
-	Template   *template.Template
+
+	// Template is executed with the constructed exoskeleton.Menu to render
+	// help content for a Module.
+	Template *template.Template
 }
 
 // Menu is the data passed to MenuOptions.Template when it is executed.
@@ -73,8 +89,8 @@ type MenuItem struct {
 	Width   int
 }
 
-// menuFor renders a menu of commands for a Module.
-func menuFor(m Module, opts *menuOptions) (string, []error) {
+// MenuFor renders a menu of commands for a Module.
+func MenuFor(m Module, opts *MenuOptions) (string, []error) {
 	if opts.Template == nil {
 		opts.Template = template.Must(template.New("menu").Funcs(templateFuncs).Parse(menuTemplate))
 	}
@@ -88,7 +104,7 @@ func menuFor(m Module, opts *menuOptions) (string, []error) {
 }
 
 // buildMenu constructs a Menu of Commands with their short summary strings for a given Module.
-func buildMenu(m Module, opts *menuOptions) (*Menu, []error) {
+func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 	if opts.SummaryFor == nil {
 		opts.SummaryFor = func(cmd Command) (string, error) { return cmd.Summary() }
 	}

@@ -17,10 +17,10 @@ func TestBuildMenuUsage(t *testing.T) {
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	menu, _ := buildMenu(entrypoint, &menuOptions{})
+	menu, _ := buildMenu(entrypoint, &MenuOptions{})
 	assert.Equal(t, "entrypoint <command> [<args>]", menu.Usage)
 
-	menu, _ = buildMenu(module, &menuOptions{})
+	menu, _ = buildMenu(module, &MenuOptions{})
 	assert.Equal(t, "entrypoint module <command> [<args>]", menu.Usage)
 }
 
@@ -29,10 +29,10 @@ func TestMenuForTrailer(t *testing.T) {
 	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
 	entrypoint.cmds = Commands{module}
 
-	menu, _ := menuFor(entrypoint, &menuOptions{})
+	menu, _ := MenuFor(entrypoint, &MenuOptions{})
 	assert.Contains(t, menu, "Run \033[96mentrypoint help <command>\033[0m to print information on a specific command.")
 
-	menu, _ = menuFor(module, &menuOptions{})
+	menu, _ = MenuFor(module, &MenuOptions{})
 	assert.Contains(t, menu, "Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.")
 }
 
@@ -95,7 +95,7 @@ func TestMenuForSectionsUncached(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		menu, errs := menuFor(entrypoint, &menuOptions{Depth: s.depth})
+		menu, errs := MenuFor(entrypoint, &MenuOptions{Depth: s.depth})
 		assert.Empty(t, errs)
 		assert.Equal(t, s.expected, sections(nocolor(menu)), "Given depth=%d", s.depth)
 	}
@@ -118,7 +118,7 @@ func TestMenuForSectionsReadFromCache(t *testing.T) {
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"CACHED SUMMARY"}}}`, modTime)))
 	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := menuFor(entrypoint, &menuOptions{SummaryFor: cache.Read})
+	menu, errs := MenuFor(entrypoint, &MenuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
 	assert.Equal(t, "COMMANDS\n   echoargs  CACHED SUMMARY", sections(nocolor(menu)))
 }
@@ -140,7 +140,7 @@ func TestMenuForSectionsWriteToCacheWhenStale(t *testing.T) {
 	f.Write([]byte(fmt.Sprintf(`{"summary":{"entrypoint echoargs":{"modTime":%d,"value":"STALE SUMMARY"}}}`, modTime-1)))
 	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := menuFor(entrypoint, &menuOptions{SummaryFor: cache.Read})
+	menu, errs := MenuFor(entrypoint, &MenuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
 	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", sections(nocolor(menu)))
 
@@ -168,7 +168,7 @@ func TestMenuForSectionsWriteToCacheWhenMissing(t *testing.T) {
 	f.Write([]byte(`{"summary":{}`))
 	cache := &summaryCache{Path: f.Name(), onError: entrypoint.onError}
 
-	menu, errs := menuFor(entrypoint, &menuOptions{SummaryFor: cache.Read})
+	menu, errs := MenuFor(entrypoint, &MenuOptions{SummaryFor: cache.Read})
 	assert.Empty(t, errs)
 	assert.Equal(t, "COMMANDS\n   echoargs  Echoes the args it received", sections(nocolor(menu)))
 
