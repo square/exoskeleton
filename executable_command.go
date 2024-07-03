@@ -91,20 +91,5 @@ func (cmd *executableCommand) Summary() (string, error) {
 // The executable is expected to write the help text to standard output and exit
 // successfully.
 func (cmd *executableCommand) Help() (string, error) {
-	return cmd.helpWithArgs(nil)
-}
-
-// helpWithArgs returns the help text for the command, passing
-// any arguments through to the executable that responds to --help.
-func (cmd *executableCommand) helpWithArgs(args []string) (string, error) {
-	return readHelpFromExecutable(cmd, args)
-}
-
-// helpWithArgsProvider can be implemented by commands to
-// provide HelpWithArgs, to accept command line arguments
-// when printing help.
-//
-// It is not exported yet because its API isn't stable.
-type helpWithArgsProvider interface {
-	helpWithArgs([]string) (string, error)
+	return readHelpFromExecutable(cmd)
 }

@@ -12,9 +12,13 @@ func Usage(cmd Command) string {
 // For example, given the Tidy command in the Go CLI ('go mod tidy'), UsageRelativeTo(Tidy, Mod)
 // would be 'tidy' and UsageRelativeTo(Tidy, Go) would be 'mod tidy'.
 func UsageRelativeTo(cmd Command, m Module) string {
-	var usage []string
+	return strings.Join(argsRelativeTo(cmd, m), " ")
+}
+
+func argsRelativeTo(cmd Command, m Module) []string {
+	args := []string{}
 	for parent := cmd; parent != nil && parent != m; parent = parent.Parent() {
-		usage = append([]string{parent.Name()}, usage...)
+		args = append([]string{parent.Name()}, args...)
 	}
-	return strings.Join(usage, " ")
+	return args
 }
