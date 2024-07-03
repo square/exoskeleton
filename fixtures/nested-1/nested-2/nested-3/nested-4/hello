@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
-# SUMMARY: Prints "hello"
+
+# Don't include in menu_test.go
+if [ "$1" = "--summary" ]; then exit 0; fi
 
 printf "hello"

@@ -1,19 +1,126 @@
 package exoskeleton
 
 import (
-	_ "embed"
+	"bytes"
 	"fmt"
 	"sort"
 	"strings"
+	"text/template"
 )
 
-func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
-	usage := Usage(m) + " <command> [<args>]"
+const menuTemplate = "\033[1m" + `USAGE` + "\033[0m" + `
+   {{.Usage}}
 
-	var items menuItems
+{{- range .Sections}}
 
+` + "\033[1m" + `{{.Heading}}` + "\033[0m" + `
+{{- range .MenuItems}}
+   {{rpad .Name .Width}}  {{.Summary}}
+{{- end}}
+{{- end}}
+
+Run ` + "\033[96m" + `{{.HelpUsage}} <command>` + "\033[0m" + ` to print information on a specific command.`
+
+var templateFuncs = template.FuncMap{
+	"rpad": func(s string, padding int) string { return fmt.Sprintf("%*s", -padding, s) },
+}
+
+// SummaryFunc is a function that is expected to return the heading
+type SummaryFunc func(Command) (string, error)
+
+// MenuOptions are the options that control how menus are constructed for modules.
+type MenuOptions struct {
+	// Depth describes how recursively a menu should be constructed. Its default
+	// value is 0, which indicates that the menu should list only the commands
+	// that are descendants of the module. A value of 1 would list descendants one
+	// level deep, a value of 2 would list descendants two levels deep, etc. A value
+	// -1 lists all descendants.
+	Depth int
+
+	// HeadingFor accepts a Command the Module the menu is being prepared for
+	// and returns a string to use as a section heading for the Command.
+	// The default function returns "COMMANDS".
+	HeadingFor MenuHeadingForFunc
+
+	// SummaryFor accepts a Command and returns its summary and, optionally, an error.
+	// The default function invokes Summary() on the provided Command.
+	SummaryFor SummaryFunc
+
+	// Template is executed with the constructed exoskeleton.Menu to render
+	// help content for a Module.
+	Template *template.Template
+}
+
+// Menu is the data passed to MenuOptions.Template when it is executed.
+type Menu struct {
+	Usage     string
+	HelpUsage string
+	Sections  MenuSections
+}
+
+type MenuSections []MenuSection
+
+type MenuSection struct {
+	Heading   string
+	MenuItems MenuItems
+}
+
+type MenuItems []*MenuItem
+
+// implement sort.Interface so that MenuItems can be sorted by Name
+
+func (m MenuItems) Len() int           { return len(m) }
+func (m MenuItems) Less(i, j int) bool { return m[i].Name < m[j].Name }
+func (m MenuItems) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+
+func (m MenuItems) MaxWidth() (longestCommand int) {
+	for _, menuItem := range m {
+		if len(menuItem.Name) > longestCommand {
+			longestCommand = len(menuItem.Name)
+		}
+	}
+	return
+}
+
+type MenuItem struct {
+	Name    string
+	Summary string
+	Heading string
+	Width   int
+}
+
+// MenuFor renders a menu of commands for a Module.
+func MenuFor(m Module, opts *MenuOptions) (string, []error) {
+	if opts.Template == nil {
+		opts.Template = template.Must(template.New("menu").Funcs(templateFuncs).Parse(menuTemplate))
+	}
+
+	menu, errs := buildMenu(m, opts)
+	b := new(bytes.Buffer)
+	if err := opts.Template.Execute(b, menu); err != nil {
+		panic(err)
+	}
+	return b.String(), errs
+}
+
+// buildMenu constructs a Menu of Commands with their short summary strings for a given Module.
+func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
+	if opts.SummaryFor == nil {
+		opts.SummaryFor = func(cmd Command) (string, error) { return cmd.Summary() }
+	}
+
+	if opts.HeadingFor == nil {
+		opts.HeadingFor = func(Module, Command) string { return "COMMANDS" }
+	}
+
+	c, err := m.Subcommands()
+	if err != nil {
+		return &Menu{}, []error{err}
+	}
+
+	c, errs := expandModules(c, opts.Depth)
+	var items MenuItems
 	seen := make(map[string]bool)
-	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
 
 	for _, cmd := range c {
 		name := UsageRelativeTo(cmd, m)
@@ -27,17 +134,17 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 			seen[name] = true
 		}
 
-		if summary, err := cache.Read(cmd); err != nil {
-			e.onError(err)
+		if summary, err := opts.SummaryFor(cmd); err != nil {
+			errs = append(errs, err)
 		} else if summary != "" {
-			heading := e.menuHeadingFor(m, cmd)
-			items = append(items, &menuItem{Name: name, Summary: summary, Heading: heading})
+			heading := opts.HeadingFor(m, cmd)
+			items = append(items, &MenuItem{Name: name, Summary: summary, Heading: heading})
 		}
 	}
 
 	width := items.MaxWidth()
 
-	byHeading := make(map[string]menuItems)
+	byHeading := make(map[string]MenuItems)
 	var orderedHeadings []string
 	for _, menuItem := range items {
 		menuItem.Width = width
@@ -47,84 +154,44 @@ func (e *Entrypoint) buildMenu(c Commands, m Module) menu {
 		byHeading[menuItem.Heading] = append(byHeading[menuItem.Heading], menuItem)
 	}
 
-	var sections menuSections
+	var sections MenuSections
 	for _, heading := range orderedHeadings {
 		menuItems := byHeading[heading]
 		if len(menuItems) > 0 {
 			sort.Sort(menuItems)
-			sections = append(sections, menuSection{heading, menuItems})
+			sections = append(sections, MenuSection{heading, menuItems})
 		}
 	}
 
-	trailer := fmt.Sprintf(
-		"Run \033[96m%s help %s\033[0m to print information on a specific command.",
-		Usage(e),
-		strings.TrimLeft(UsageRelativeTo(m, e)+" <command>", " "),
-	)
-
-	return menu{Usage: usage, Sections: sections, Trailer: trailer}
+	return &Menu{
+		Usage:     Usage(m) + " <command> [<args>]",
+		Sections:  sections,
+		HelpUsage: helpUsage(m),
+	}, errs
 }
 
-type menu struct {
-	Usage    string
-	Sections menuSections
-	Trailer  string
-}
+func expandModules(cmds Commands, depth int) (Commands, []error) {
+	all := Commands{}
+	var errs []error
 
-func (m menu) String() string {
-	return fmt.Sprintf("USAGE\n   %s\n\n%s\n\n%s", m.Usage, m.Sections, m.Trailer)
-}
-
-type menuSections []menuSection
-
-func (m menuSections) String() string {
-	var s []string
-	for _, section := range m {
-		s = append(s, section.String())
-	}
-	return strings.Join(s, "\n\n")
-}
-
-type menuSection struct {
-	Heading   string
-	MenuItems menuItems
-}
-
-func (section menuSection) String() string {
-	return fmt.Sprintf("\033[1m%s\033[0m\n   %s", section.Heading, section.MenuItems)
-}
-
-type menuItems []*menuItem
-
-// Implement sort.Interface so that MenuItems can be sorted by Name
-func (m menuItems) Len() int           { return len(m) }
-func (m menuItems) Less(i, j int) bool { return m[i].Name < m[j].Name }
-func (m menuItems) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
-
-func (m menuItems) MaxWidth() (longestCommand int) {
-	for _, menuItem := range m {
-		if len(menuItem.Name) > longestCommand {
-			longestCommand = len(menuItem.Name)
+	for _, cmd := range cmds {
+		if m, ok := cmd.(Module); ok && depth != 0 {
+			subcmds, err := m.Subcommands()
+			if err != nil {
+				errs = append(errs, err)
+			}
+			expandedSubcmds, expansionErrs := expandModules(subcmds, depth-1)
+			all = append(all, expandedSubcmds...)
+			errs = append(errs, expansionErrs...)
+		} else {
+			all = append(all, cmd)
 		}
 	}
-	return
+
+	return all, errs
 }
 
-func (m menuItems) String() string {
-	var s []string
-	for _, mi := range m {
-		s = append(s, mi.String())
-	}
-	return strings.Join(s, "\n   ")
-}
-
-type menuItem struct {
-	Name    string
-	Summary string
-	Heading string
-	Width   int
-}
-
-func (mi *menuItem) String() string {
-	return fmt.Sprintf("%*s  %s", -mi.Width, mi.Name, mi.Summary)
+func helpUsage(m Module) string {
+	args := argsRelativeTo(m, nil)
+	return strings.Join(append([]string{args[0], "help"}, args[1:]...), " ")
 }

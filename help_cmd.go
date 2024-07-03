@@ -50,46 +50,31 @@ func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
 }
 
 func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
-	cmds, err := m.Subcommands()
-	if err != nil {
+	// If `Subcommands()` will return an error, return early
+	if _, err := m.Subcommands(); err != nil {
 		return "", err
 	}
 
-	var filteredArgs []string
-	var willExpandMenu bool
+	cache := &summaryCache{Path: e.cachePath, onError: e.onError}
+	opts := &MenuOptions{
+		HeadingFor: e.menuHeadingFor,
+		SummaryFor: cache.Read,
+		Template:   e.menuTemplate,
+	}
 
-	for i, arg := range args {
+	for _, arg := range args {
 		if arg == "--" {
-			filteredArgs = append(filteredArgs, args[i:]...)
 			break
 		} else if arg == "--all" || arg == "-a" {
-			willExpandMenu = true
-		} else {
-			filteredArgs = append(filteredArgs, arg)
+			opts.Depth = -1
 		}
 	}
 
-	if willExpandMenu {
-		cmds = e.expandModules(cmds)
+	menu, errs := MenuFor(m, opts)
+	for _, err := range errs {
+		e.onError(err)
 	}
-
-	return e.buildMenu(cmds, m).String(), nil
-}
-
-func (e *Entrypoint) expandModules(cmds Commands) Commands {
-	all := Commands{}
-	for _, cmd := range cmds {
-		if m, ok := cmd.(Module); ok {
-			subcmds, err := m.Subcommands()
-			if err != nil {
-				e.onError(err)
-			}
-			all = append(all, e.expandModules(subcmds)...)
-		} else {
-			all = append(all, cmd)
-		}
-	}
-	return all
+	return menu, nil
 }
 
 func printHelp(help string) {
