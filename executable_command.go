@@ -1,11 +1,9 @@
 package exoskeleton
 
 import (
-	"errors"
 	"os"
 	"os/exec"
 
-	"github.com/square/exit"
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
 
@@ -37,17 +35,7 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 	command.Stderr = os.Stderr
 	command.Env = env
 
-	err := command.Run()
-	if err == nil {
-		return nil
-	}
-
-	var exitError *exec.ExitError
-	if errors.As(err, &exitError) {
-		return exit.Wrap(nil, exitError.ExitCode())
-	}
-
-	return err
+	return command.Run()
 }
 
 // Complete invokes the executable with `--complete` as its first argument
