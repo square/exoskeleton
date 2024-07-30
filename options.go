@@ -84,7 +84,6 @@ func buildCommands(m Module, cmds []interface{}) []Command {
 //
 // These are recoverable errors such as
 //   - a broken symlink is encountered in one of the paths being searched
-//   - exoskeleton is unable to leverage its cache because it is unable to read or write to it
 //   - a command exits unnsuccessfully when invoked with --summary or --help
 func OnError(fn ErrorFunc) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.errorCallbacks = append(e.errorCallbacks, fn) })

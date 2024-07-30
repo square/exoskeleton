@@ -29,7 +29,6 @@ type Entrypoint struct {
 	name                     string
 	cmds                     Commands
 	maxDepth                 int
-	cachePath                string
 	menuHeadingFor           MenuHeadingForFunc
 	menuTemplate             *template.Template
 	moduleMetadataFilename   string
@@ -105,18 +104,10 @@ func New(paths []string, options ...Option) (*Entrypoint, error) {
 }
 
 func newWithDefaults(path string) *Entrypoint {
-	name := filepath.Base(path)
-
-	var cachePath string
-	if dir, err := os.UserCacheDir(); err == nil {
-		cachePath = filepath.Join(dir, name+".json")
-	}
-
 	return &Entrypoint{
 		path:                   path,
-		name:                   name,
+		name:                   filepath.Base(path),
 		maxDepth:               -1,
-		cachePath:              cachePath,
 		moduleMetadataFilename: ".exoskeleton",
 		cmdsToPrepend:          []Command{},
 		cmdsToAppend:           []Command{},
