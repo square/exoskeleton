@@ -22,14 +22,16 @@ func (e *Entrypoint) Identify(args []string) (Command, []string, error) {
 
 	cmd, rest, err := identify(e, args)
 
-	if IsNull(cmd) {
-		e.commandNotFound(cmd)
-	}
-
 	// Recognize `--help` and `-h` as aliases for the built-in `help` command
 	// only when they immediately follow an identifiable command.
 	if !IsNull(cmd) && len(rest) > 0 && (rest[0] == "--help" || rest[0] == "-h") {
 		return e.Identify(append(append([]string{"help"}, argsRelativeTo(cmd, e)...), rest[1:]...))
+	}
+
+	if IsNull(cmd) {
+		e.commandNotFound(cmd)
+	} else if err == nil {
+		e.afterIdentify(cmd, rest)
 	}
 
 	return cmd, rest, err

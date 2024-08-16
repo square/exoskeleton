@@ -96,6 +96,12 @@ func OnCommandNotFound(fn CommandNotFoundFunc) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.commandNotFoundCallbacks = append(e.commandNotFoundCallbacks, fn) })
 }
 
+// AfterIdentify registers a callback (AfterIdentifyFunc) to be invoked with any command
+// that is successfully identified.
+func AfterIdentify(fn AfterIdentifyFunc) Option {
+	return (optionFunc)(func(e *Entrypoint) { e.afterIdentifyCallbacks = append(e.afterIdentifyCallbacks, fn) })
+}
+
 // WithName sets the name of the entrypoint.
 // (By default, this is the basename of the executable.)
 func WithName(value string) Option {
