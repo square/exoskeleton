@@ -12,6 +12,10 @@ import (
 // CommandNotFoundFunc is a function that accepts a Null Command object. It is called when a command is not found.
 type CommandNotFoundFunc func(*Entrypoint, Command)
 
+// AfterIdentifyFunc is a function that is called after a command is identified. It accepts the Command and
+// the remaining arguments that were not used to identify the command.
+type AfterIdentifyFunc func(*Entrypoint, Command, []string)
+
 // ErrorFunc is called when an error occurs.
 type ErrorFunc func(*Entrypoint, error)
 
@@ -33,6 +37,7 @@ type Entrypoint struct {
 	menuTemplate             *template.Template
 	moduleMetadataFilename   string
 	errorCallbacks           []ErrorFunc
+	afterIdentifyCallbacks   []AfterIdentifyFunc
 	commandNotFoundCallbacks []CommandNotFoundFunc
 	cmdsToAppend             []Command
 	cmdsToPrepend            []Command
@@ -117,6 +122,12 @@ func newWithDefaults(path string) *Entrypoint {
 func (e *Entrypoint) onError(err error) {
 	for _, callback := range e.errorCallbacks {
 		callback(e, err)
+	}
+}
+
+func (e *Entrypoint) afterIdentify(cmd Command, args []string) {
+	for _, callback := range e.afterIdentifyCallbacks {
+		callback(e, cmd, args)
 	}
 }
 
