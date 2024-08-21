@@ -1,6 +1,7 @@
 package exoskeleton
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"syscall"
@@ -45,7 +46,12 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 		Foreground: true,
 	}
 
-	return command.Run()
+	err := command.Run()
+	if errors.Is(err, syscall.ENOTTY) {
+		command.SysProcAttr = nil
+		return command.Run()
+	}
+	return err
 }
 
 // Complete invokes the executable with `--complete` as its first argument
