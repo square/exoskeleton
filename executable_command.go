@@ -3,6 +3,7 @@ package exoskeleton
 import (
 	"os"
 	"os/exec"
+	"syscall"
 
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
@@ -34,6 +35,15 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	command.Env = env
+
+	// Put the command in its own progress group and foreground that process group
+	// so that signals are sent to the command and not to the exoskeleton.
+	//
+	// For example, if the user presses Ctrl+C, the Interrupt signal is sent to the
+	// subcommand, which may choose to trap it.
+	command.SysProcAttr = &syscall.SysProcAttr{
+		Foreground: true,
+	}
 
 	return command.Run()
 }
