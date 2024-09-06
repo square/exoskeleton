@@ -1,11 +1,11 @@
 package exoskeleton
 
 import (
-	"errors"
 	"os"
 	"os/exec"
 	"syscall"
 
+	"github.com/mattn/go-isatty"
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
 
@@ -37,21 +37,28 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 	command.Stderr = os.Stderr
 	command.Env = env
 
-	// Put the command in its own progress group and foreground that process group
-	// so that signals are sent to the command and not to the exoskeleton.
-	//
-	// For example, if the user presses Ctrl+C, the Interrupt signal is sent to the
-	// subcommand, which may choose to trap it.
-	command.SysProcAttr = &syscall.SysProcAttr{
-		Foreground: true,
+	// Setting the Foreground attribute in SysProcAttr is only valid when the process
+	// has a controlling terminal (CTTY). If it doesn't, Run() would return ENOTTY
+	// (or sometimes ENODEV).
+	stdin := os.Stdin.Fd()
+	if isatty.IsTerminal(stdin) {
+		// Put the command in its own progress group and foreground that process group
+		// so that signals are sent to the command and not to the exoskeleton.
+		//
+		// For example, if the user presses Ctrl+C, the Interrupt signal is sent to the
+		// subcommand, which may choose to trap it.
+		command.SysProcAttr = &syscall.SysProcAttr{
+			Foreground: true,
+
+			// Ctty must be set to the file descriptor of a TTY when Foreground is set.
+			// Its default value is 0, which is the file descriptor of Stdin.
+			//
+			// We set it explicitly because os.Stdin may be assigned and to avoid confusion.
+			Ctty: int(stdin),
+		}
 	}
 
-	err := command.Run()
-	if errors.Is(err, syscall.ENOTTY) {
-		command.SysProcAttr = nil
-		return command.Run()
-	}
-	return err
+	return command.Run()
 }
 
 // Complete invokes the executable with `--complete` as its first argument
