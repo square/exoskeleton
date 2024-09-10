@@ -17,7 +17,7 @@ func (m *executableModule) Summary() (string, error) {
 		}
 	}
 
-	return m.summary, nil
+	return *m.summary, nil
 }
 
 func (m *executableModule) Exec(e *Entrypoint, args, env []string) error {
