@@ -15,7 +15,7 @@ type executableCommand struct {
 	path         string
 	name         string
 	args         []string
-	summary      string
+	summary      *string
 	discoveredIn string
 }
 
@@ -86,8 +86,8 @@ func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]str
 // The executable is expected to write the summary to standard output and exit
 // successfully.
 func (cmd *executableCommand) Summary() (string, error) {
-	if cmd.summary != "" {
-		return cmd.summary, nil
+	if cmd.summary != nil {
+		return *cmd.summary, nil
 	}
 
 	return readSummaryFromExecutable(cmd)

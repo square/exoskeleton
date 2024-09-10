@@ -119,7 +119,7 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 
 type commandDescriptor struct {
 	Name     string               `json:"name"`
-	Summary  string               `json:"summary"`
+	Summary  *string              `json:"summary,omitempty"`
 	Commands []*commandDescriptor `json:"commands,omitempty"`
 }
 

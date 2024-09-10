@@ -21,6 +21,11 @@ if [[ "$1" == "--describe-commands" ]]; then
         {
           "name": "tidy",
           "summary": "add missing and remove unused modules"
+        },
+        {
+          "name": "why",
+          "summary": "",
+          "_comment": "Test having an empty summary, which hides a command"
         }
       ]
     }
