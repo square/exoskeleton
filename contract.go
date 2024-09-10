@@ -47,7 +47,7 @@ func readSummaryFromModulefile(cmd *directoryModule) (string, error) {
 			exit.Wrap(
 				CommandSummaryError{
 					CommandError{
-						Message: fmt.Sprintf("error reading %s: %s", cmd.path, err),
+						Message: fmt.Sprintf("summary('%s'): %s", Usage(cmd), err),
 						Command: cmd,
 						Cause:   err,
 					},
@@ -67,7 +67,7 @@ func readSummaryFromExecutable(cmd *executableCommand) (string, error) {
 			exit.Wrap(
 				CommandSummaryError{
 					CommandError{
-						Message: fmt.Sprintf("error getting summary from %s: %s", cmd.path, err),
+						Message: fmt.Sprintf("summary('%s'): %s", Usage(cmd), err),
 						Command: cmd,
 						Cause:   err,
 					},
@@ -87,7 +87,7 @@ func readHelpFromExecutable(cmd *executableCommand) (string, error) {
 			exit.Wrap(
 				CommandHelpError{
 					CommandError{
-						Message: fmt.Sprintf("error getting help from %s: %s", cmd.path, err),
+						Message: fmt.Sprintf("help('%s'): %s", Usage(cmd), err),
 						Command: cmd,
 						Cause:   err,
 					},
@@ -104,11 +104,13 @@ func describeCommands(m *executableModule) (*commandDescriptor, error) {
 	cmd.Stderr = nil
 	output, err := cmd.Output()
 	if err != nil {
+		err = fmt.Errorf("exec '%s': %w", strings.Join(cmd.Args, " "), err)
+
 		return &commandDescriptor{},
 			exit.Wrap(
 				CommandDescribeError{
 					CommandError{
-						Message: fmt.Sprintf("error executing `%s --describe-commands`: %s", m.path, err),
+						Message: err.Error(),
 						Command: m,
 						Cause:   err,
 					},
@@ -265,7 +267,7 @@ func getMessageFromExecution(c *executableCommand, message string) (string, erro
 	cmd.Stderr = nil
 	out, err := cmd.Output()
 	if err != nil {
-		err = fmt.Errorf("failed to execute %s: %w", cmd.Path, err)
+		err = fmt.Errorf("exec '%s': %w", strings.Join(cmd.Args, " "), err)
 	}
 	return strings.TrimRight(string(out), "\n"), err
 }
