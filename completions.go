@@ -56,8 +56,16 @@ func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, 
 		toComplete := args[0]
 		var name string
 
+		seen := make(map[string]bool)
+
 		for _, subcmd := range c {
 			name = subcmd.Name()
+
+			if seen[name] {
+				continue
+			} else {
+				seen[name] = true
+			}
 
 			if strings.HasPrefix(name, toComplete) {
 				completions = append(completions, name)
