@@ -3,7 +3,6 @@
 if [[ "$1" == "--describe-commands" ]]; then
   cat << EOF
 {
-  "name": "go",
   "summary": "Provides several commands",
   "commands": [
     {

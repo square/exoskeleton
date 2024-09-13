@@ -47,7 +47,6 @@ func (m *executableModule) discover() error {
 		return err
 	}
 
-	m.name = descriptor.Name
 	m.summary = descriptor.Summary
 	m.cmds = m.discoverer.toCommands(m, descriptor.Commands, nil)
 	return nil
