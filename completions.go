@@ -63,9 +63,8 @@ func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, 
 
 			if seen[name] {
 				continue
-			} else {
-				seen[name] = true
 			}
+			seen[name] = true
 
 			if strings.HasPrefix(name, toComplete) {
 				completions = append(completions, name)
