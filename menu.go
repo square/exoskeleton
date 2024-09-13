@@ -130,9 +130,8 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 
 		if seen[name] {
 			continue
-		} else {
-			seen[name] = true
 		}
+		seen[name] = true
 
 		if summary, err := opts.SummaryFor(cmd); err != nil {
 			errs = append(errs, err)
