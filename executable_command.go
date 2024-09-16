@@ -64,16 +64,7 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 // Complete invokes the executable with `--complete` as its first argument
 // and parses its output according to Cobra's ShellComp API.
 func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error) {
-	command := cmd.Command(append([]string{"--complete", "--"}, args...)...)
-	command.Stdin = nil
-	command.Stderr = nil
-	command.Env = env
-
-	if out, err := command.Output(); err != nil {
-		return []string{}, shellcomp.DirectiveNoFileComp, err
-	} else {
-		return shellcomp.Unmarshal(out)
-	}
+	return getCompletionsFromExecutable(cmd, args, env)
 }
 
 // Summary returns the (short!) description of the command to be displayed

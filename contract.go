@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/square/exit"
+	"github.com/square/exoskeleton/pkg/shellcomp"
 )
 
 // CommandError records an error that occurred with a command's implementation of its interface
@@ -270,4 +271,18 @@ func getMessageFromExecution(c *executableCommand, message string) (string, erro
 		err = fmt.Errorf("exec '%s': %w", strings.Join(cmd.Args, " "), err)
 	}
 	return strings.TrimRight(string(out), "\n"), err
+}
+
+func getCompletionsFromExecutable(c *executableCommand, args, env []string) ([]string, shellcomp.Directive, error) {
+	cmd := c.Command(append([]string{"--complete", "--"}, args...)...)
+	cmd.Stdin = nil
+	cmd.Stderr = nil
+	cmd.Env = env
+
+	out, err := cmd.Output()
+	if err != nil {
+		return []string{}, shellcomp.DirectiveNoFileComp, err
+	}
+
+	return shellcomp.Unmarshal(out)
 }
