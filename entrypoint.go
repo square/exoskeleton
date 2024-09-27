@@ -3,6 +3,7 @@ package exoskeleton
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"text/template"
 
@@ -27,6 +28,10 @@ type ErrorFunc func(*Entrypoint, error)
 // whose heading should be returned.
 type MenuHeadingForFunc func(Module, Command) string
 
+type ExecutorFunc func(*exec.Cmd) error
+
+func defaultExecutor(cmd *exec.Cmd) error { return cmd.Run() }
+
 // Entrypoint is the root of an exoskeleton CLI application.
 type Entrypoint struct {
 	path                     string
@@ -39,6 +44,7 @@ type Entrypoint struct {
 	errorCallbacks           []ErrorFunc
 	afterIdentifyCallbacks   []AfterIdentifyFunc
 	commandNotFoundCallbacks []CommandNotFoundFunc
+	executor                 ExecutorFunc
 	cmdsToAppend             []Command
 	cmdsToPrepend            []Command
 }
@@ -114,6 +120,7 @@ func newWithDefaults(path string) *Entrypoint {
 		name:                   filepath.Base(path),
 		maxDepth:               -1,
 		moduleMetadataFilename: ".exoskeleton",
+		executor:               defaultExecutor,
 		cmdsToPrepend:          []Command{},
 		cmdsToAppend:           []Command{},
 	}

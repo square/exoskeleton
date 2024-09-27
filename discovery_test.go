@@ -94,7 +94,7 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 
 	for _, s := range scenarios {
 		var cmds Commands
-		d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: s.maxDepth}
+		d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: s.maxDepth, executor: defaultExecutor}
 		d.discoverIn(fixtures, nil, &cmds)
 
 		var names []string
@@ -110,7 +110,10 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 
 func TestDiscovererBuildsCommand(t *testing.T) {
 	var parent Module = &builtinModule{}
-	d := discoverer{onError: nil, modulefile: ".exoskeleton", maxDepth: 2}
+
+	// We don't set `onError` or `executor` because no-nil functions can't be compared.
+	// That is: the expected `Command` will never be equal to the discovered one.
+	d := discoverer{modulefile: ".exoskeleton", maxDepth: 2}
 
 	scenarios := []struct {
 		executable string
@@ -175,7 +178,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 
 func TestFollowingSymlinks(t *testing.T) {
 	var cmds Commands
-	d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: 1}
+	d := discoverer{modulefile: ".exoskeleton", maxDepth: 1}
 	d.discoverIn(filepath.Join(fixtures, "edge-cases"), nil, &cmds)
 
 	cmds, err := cmds.Find("symlink-test").(Module).Subcommands()

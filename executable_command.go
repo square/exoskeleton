@@ -1,11 +1,11 @@
 package exoskeleton
 
 import (
+	"bytes"
+	"errors"
 	"os"
 	"os/exec"
-	"syscall"
 
-	"github.com/mattn/go-isatty"
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
 
@@ -17,6 +17,7 @@ type executableCommand struct {
 	args         []string
 	summary      *string
 	discoveredIn string
+	executor     ExecutorFunc
 }
 
 func (cmd *executableCommand) Parent() Module       { return cmd.parent }
@@ -36,29 +37,7 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	command.Env = env
-
-	// Setting the Foreground attribute in SysProcAttr is only valid when the process
-	// has a controlling terminal (CTTY). If it doesn't, Run() would return ENOTTY
-	// (or sometimes ENODEV).
-	stdin := os.Stdin.Fd()
-	if isatty.IsTerminal(stdin) {
-		// Put the command in its own progress group and foreground that process group
-		// so that signals are sent to the command and not to the exoskeleton.
-		//
-		// For example, if the user presses Ctrl+C, the Interrupt signal is sent to the
-		// subcommand, which may choose to trap it.
-		command.SysProcAttr = &syscall.SysProcAttr{
-			Foreground: true,
-
-			// Ctty must be set to the file descriptor of a TTY when Foreground is set.
-			// Its default value is 0, which is the file descriptor of Stdin.
-			//
-			// We set it explicitly because os.Stdin may be assigned and to avoid confusion.
-			Ctty: int(stdin),
-		}
-	}
-
-	return command.Run()
+	return cmd.run(command)
 }
 
 // Complete invokes the executable with `--complete` as its first argument
@@ -94,4 +73,27 @@ func (cmd *executableCommand) Summary() (string, error) {
 // successfully.
 func (cmd *executableCommand) Help() (string, error) {
 	return readHelpFromExecutable(cmd)
+}
+
+func (cmd *executableCommand) run(c *exec.Cmd) error {
+	return cmd.executor(c)
+}
+
+func (cmd *executableCommand) output(c *exec.Cmd) ([]byte, error) {
+	// Expect to capture standard output and standard error
+	if c.Stdout != nil {
+		return nil, errors.New("exec: Stdout already set")
+	}
+	if c.Stderr != nil {
+		return nil, errors.New("exec: Stderr already set")
+	}
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout
+	c.Stderr = &stderr
+
+	err := cmd.run(c)
+	if ee, ok := err.(*exec.ExitError); ok {
+		ee.Stderr = stderr.Bytes()
+	}
+	return stdout.Bytes(), err
 }

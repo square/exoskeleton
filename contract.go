@@ -102,8 +102,7 @@ func readHelpFromExecutable(cmd *executableCommand) (string, error) {
 
 func describeCommands(m *executableModule) (*commandDescriptor, error) {
 	cmd := m.Command("--describe-commands")
-	cmd.Stderr = nil
-	output, err := cmd.Output()
+	out, err := m.output(cmd)
 	if err != nil {
 		err = fmt.Errorf("exec '%s': %w", strings.Join(cmd.Args, " "), err)
 
@@ -121,7 +120,7 @@ func describeCommands(m *executableModule) (*commandDescriptor, error) {
 	}
 
 	var descriptor *commandDescriptor
-	if err := json.Unmarshal(output, &descriptor); err != nil {
+	if err := json.Unmarshal(out, &descriptor); err != nil {
 		return &commandDescriptor{},
 			exit.Wrap(
 				CommandDescribeError{
@@ -265,8 +264,7 @@ func getHelpFromMagicComments(reader *bufio.Reader) (string, error) {
 
 func getMessageFromExecution(c *executableCommand, message string) (string, error) {
 	cmd := c.Command("--" + message)
-	cmd.Stderr = nil
-	out, err := cmd.Output()
+	out, err := c.output(cmd)
 	if err != nil {
 		err = fmt.Errorf("exec '%s': %w", strings.Join(cmd.Args, " "), err)
 	}
@@ -275,11 +273,9 @@ func getMessageFromExecution(c *executableCommand, message string) (string, erro
 
 func getCompletionsFromExecutable(c *executableCommand, args, env []string) ([]string, shellcomp.Directive, error) {
 	cmd := c.Command(append([]string{"--complete", "--"}, args...)...)
-	cmd.Stdin = nil
-	cmd.Stderr = nil
 	cmd.Env = env
 
-	out, err := cmd.Output()
+	out, err := c.output(cmd)
 	if err != nil {
 		return []string{}, shellcomp.DirectiveNoFileComp, err
 	}

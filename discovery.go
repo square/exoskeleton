@@ -13,6 +13,7 @@ type discoverer struct {
 	maxDepth   int
 	depth      int
 	onError    func(error)
+	executor   ExecutorFunc
 	modulefile string
 }
 
@@ -20,6 +21,7 @@ func (e *Entrypoint) discoverIn(paths []string) Commands {
 	all := Commands{}
 	d := &discoverer{
 		onError:    e.onError,
+		executor:   e.executor,
 		modulefile: e.moduleMetadataFilename,
 		maxDepth:   e.maxDepth,
 	}
@@ -77,11 +79,13 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 				path:         modulefilePath,
 				name:         name,
 				discoveredIn: discoveredIn,
+				executor:     d.executor,
 			},
 			discoverer: discoverer{
 				maxDepth:   d.maxDepth,
 				depth:      d.depth + 1,
 				onError:    d.onError,
+				executor:   d.executor,
 				modulefile: d.modulefile,
 			},
 		}, nil
@@ -98,6 +102,7 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 			path:         path,
 			name:         strings.TrimSuffix(name, executableModuleExtension),
 			discoveredIn: discoveredIn,
+			executor:     d.executor,
 		}
 
 		// if the executable has the extension ".exoskeleton" then we should treat it as a module.
@@ -108,6 +113,7 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 					maxDepth:   d.maxDepth,
 					depth:      d.depth + 1,
 					onError:    d.onError,
+					executor:   d.executor,
 					modulefile: d.modulefile,
 				},
 			}, nil
