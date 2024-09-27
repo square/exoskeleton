@@ -62,6 +62,7 @@ func (d *discoverer) toCommands(parent *executableModule, descriptors []*command
 			args:         append(args, descriptor.Name),
 			name:         descriptor.Name,
 			summary:      descriptor.Summary,
+			executor:     parent.executor,
 		}
 
 		depth := d.depth + len(args)

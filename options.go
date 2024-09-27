@@ -130,6 +130,12 @@ func WithMenuTemplate(value *template.Template) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.menuTemplate = value })
 }
 
+// WithExecutor supplies a function that executes a subcommand.
+// The default executor calls `Run()` on the command and returns the error.
+func WithExecutor(value ExecutorFunc) Option {
+	return (optionFunc)(func(e *Entrypoint) { e.executor = value })
+}
+
 // WithModuleMetadataFilename sets the filename to use for module metadata.
 // (Default: ".exoskeleton")
 func WithModuleMetadataFilename(value string) Option {
