@@ -12,7 +12,14 @@ jobs:
   cliffy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.SQ_CHANGELOG_COMMITTER_APP_ID }}
+          private-key: ${{ secrets.SQ_CHANGELOG_COMMITTER_PRIVATE_KEY }}
       - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
       - run: make CHANGELOG.md
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
