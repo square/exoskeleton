@@ -14,6 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: make CHANGELOG.md
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: peter-evans/create-pull-request@v7
         with:
-          commit_message: "doc(changelog): Update CHANGELOG.md"
+          branch: cliffy/changelog
+          add-paths: CHANGELOG.md
+          commit-message: "doc(changelog): Update CHANGELOG.md"
+          title: "doc(changelog): Update CHANGELOG.md"
+          body: |
+            **[Preview](https://github.com/square/exoskeleton/blob/cliffy/changelog/CHANGELOG.md)**
