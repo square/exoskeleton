@@ -10,35 +10,29 @@ All notable changes to this project will be documented in this file. See [conven
 # template for the changelog body
 # https://keats.github.io/tera/docs/#introduction
 body = """
----
 {% if version %}\
     {% if previous.version %}\
-        ## [{{ version | trim_start_matches(pat="v") }}]($REPO/compare/{{ previous.version }}..{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+        ## [{{ version | trim_start_matches(pat="v") }}]($REPO/compare/{{ previous.version }}..{{ version }})&nbsp;&nbsp;·&nbsp;&nbsp;{{ timestamp | date(format="%Y-%m-%d") }}
     {% else %}\
-        ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+        ## [{{ version | trim_start_matches(pat="v") }}]&nbsp;&nbsp;·&nbsp;&nbsp;{{ timestamp | date(format="%Y-%m-%d") }}
     {% endif %}\
 {% else %}\
     ## [unreleased]
 {% endif %}\
-{% for group in ["Features 🏔️", "Bug Fixes 🐛", "Performance ⏱️", "Documentation 📚", "Other Changes"] %}\
+{% raw %}\n{% endraw %}\
+{% for group in ["feat", "fix", "perf", "doc", "refactor", "chore", "ci"] %}\
     {% set group_commits = commits | filter(attribute="group", value=group) %}\
-    {% if group_commits %}
-        ### {{ group | striptags | trim | upper_first }}
-        {% for commit in group_commits
-        | filter(attribute="scope")
-        | sort(attribute="scope") %}
-            - **{{commit.scope}}{% if commit.breaking %}** [**breaking**]**{% endif %}:** \
-                {{ commit.message }} - [{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id }})
-        {%- endfor -%}
-        {% raw %}\n{% endraw %}\
-        {%- for commit in group_commits %}
-            {%- if commit.scope -%}
-            {% else -%}
-                - {% if commit.breaking %} [**breaking**]{% endif %}\
-                    {{ commit.message }} - [{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id }})
-            {% endif -%}
-        {% endfor -%}
-    {% endif -%}
+    {% for commit in group_commits | filter(attribute="scope") | sort(attribute="scope") %}\
+        - **{{commit.group}}({{commit.scope}}){% if commit.breaking %}** [**breaking**]**{% endif %}:** \
+            {{ commit.message }}&nbsp;&nbsp;·&nbsp;&nbsp;[{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id }})
+    {% endfor %}\
+    {% for commit in group_commits %}\
+        {% if commit.scope %}\
+        {% else -%}\
+            - **{{commit.group}}{% if commit.breaking %}** [**breaking**]**{% endif %}:** \
+                {{ commit.message }}&nbsp;&nbsp;·&nbsp;&nbsp;[{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id }})
+        {% endif %}\
+    {% endfor %}\
 {% endfor %}\n
 """
 # template for the changelog footer
@@ -66,16 +60,8 @@ commit_preprocessors = [
 # regex for parsing and grouping commits
 commit_parsers = [
     { message = "^doc\\(changelog\\):", skip = true },
+    { message = "^chore\\(changelog\\):", skip = true },
     { message = "^chore\\(version\\):", skip = true },
-
-    { message = "^feat\\b", group = "Features 🏔️" },
-    { message = "^fix\\b", group = "Bug Fixes 🐛" },
-    { message = "^perf\\b", group = "Performance ⏱️" },
-    { message = "^doc\\b", group = "Documentation 📚" },
-
-    { message = "^refactor\\b", group = "Other Changes" },
-    { message = "^chore\\b", group = "Other Changes" },
-    { message = "^ci\\b", group = "Other Changes" },
 ]
 # filter out the commits that are not matched by commit parsers
 filter_commits = false
