@@ -98,7 +98,7 @@ All notable changes to this project will be documented in this file. See [conven
 ## [1.0.2](https://github.com/square/exoskeleton/compare/v1.0.1..v1.0.2)&nbsp;&nbsp;·&nbsp;&nbsp;2024-03-14
 
 
-## [1.0.1](https://github.com/square/exoskeleton/compare/v1.6.6..v1.0.1)&nbsp;&nbsp;·&nbsp;&nbsp;2024-03-08
+## [1.0.1]&nbsp;&nbsp;·&nbsp;&nbsp;2024-03-08
 
 - **feat:** Open-source exoskeleton&nbsp;&nbsp;·&nbsp;&nbsp;[af64657](https://github.com/square/exoskeleton/commit/af64657ad6bb7f1eaebada5c1519df31b3b03fcb)
 
