@@ -118,7 +118,7 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 		return &Menu{}, []error{err}
 	}
 
-	c, errs := expandModules(c, opts.Depth)
+	c, errs := c.Expand(WithDepth(opts.Depth), WithoutExpandedModules())
 	var items MenuItems
 	seen := make(map[string]bool)
 
@@ -167,27 +167,6 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 		Sections:  sections,
 		HelpUsage: helpUsage(m),
 	}, errs
-}
-
-func expandModules(cmds Commands, depth int) (Commands, []error) {
-	all := Commands{}
-	var errs []error
-
-	for _, cmd := range cmds {
-		if m, ok := cmd.(Module); ok && depth != 0 {
-			subcmds, err := m.Subcommands()
-			if err != nil {
-				errs = append(errs, err)
-			}
-			expandedSubcmds, expansionErrs := expandModules(subcmds, depth-1)
-			all = append(all, expandedSubcmds...)
-			errs = append(errs, expansionErrs...)
-		} else {
-			all = append(all, cmd)
-		}
-	}
-
-	return all, errs
 }
 
 func helpUsage(m Module) string {

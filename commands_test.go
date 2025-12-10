@@ -1,6 +1,7 @@
 package exoskeleton
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ func TestFind(t *testing.T) {
 	assert.Equal(t, nil, cmds.Find("c"))
 }
 
-func TestFlatten(t *testing.T) {
+func TestExpand(t *testing.T) {
 	a := &executableCommand{name: "a"}
 	b := &directoryModule{executableCommand: executableCommand{name: "b"}}
 	c := &executableCommand{parent: b, name: "c"}
@@ -26,11 +27,31 @@ func TestFlatten(t *testing.T) {
 	e := &executableCommand{parent: d, name: "e"}
 	b.cmds = Commands{c, d}
 	d.cmds = Commands{e}
-
 	given := Commands{a, b}
-	expected := Commands{a, b, c, d, e}
 
-	cmds, errs := given.Flatten()
-	assert.Empty(t, errs)
-	assert.Equal(t, expected, cmds)
+	scenarios :=
+		[]struct {
+			ops      []ExpandOption
+			expected Commands
+		}{
+			{[]ExpandOption{WithDepth(0)}, Commands{a, b}},
+			{[]ExpandOption{WithDepth(1)}, Commands{a, b, c, d}},
+			{[]ExpandOption{WithDepth(2)}, Commands{a, b, c, d, e}},
+			{[]ExpandOption{WithDepth(-1)}, Commands{a, b, c, d, e}},
+			{[]ExpandOption{WithoutExpandedModules()}, Commands{a, c, e}},
+		}
+
+	for i, s := range scenarios {
+		cmds, errs := given.Expand(s.ops...)
+		assert.Empty(t, errs)
+		assert.Equal(t, namesOf(s.expected), namesOf(cmds), "Expand[%d]", i)
+	}
+}
+
+func namesOf(cmds Commands) string {
+	var result []string
+	for _, cmd := range cmds {
+		result = append(result, cmd.Name())
+	}
+	return strings.Join(result, "\n")
 }
