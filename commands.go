@@ -1,6 +1,8 @@
 package exoskeleton
 
-import "sync"
+import (
+	"sync"
+)
 
 type Commands []Command
 
@@ -51,55 +53,58 @@ func WithoutExpandedModules() ExpandOption {
 }
 
 func expand(c Commands, depth int, includeExpandedModules bool) (Commands, []error) {
-	type result struct {
-		commands Commands
-		errors   []error
-	}
-	results := make([]result, len(c))
-	var wg sync.WaitGroup
-
-	for i, cmd := range c {
+	return parallelMap(c, func(cmd Command) ([]Command, []error) {
 		// If this is a module, recursively flatten its subcommands...
 		if m, ok := cmd.(Module); ok && depth != 0 {
-			// ...and do that in parallel because resolving subcommands may involve
-			// executing them with `--describe-commands` and subcommands that accidentally
-			// introduce latency impact the experience.
-			wg.Add(1)
-			go func(idx int, mod Module) {
-				defer wg.Done()
-				cmds := Commands{}
-				errs := []error{}
+			cmds := []Command{}
+			errs := []error{}
 
-				if includeExpandedModules {
-					cmds = append(cmds, mod)
-				}
+			if includeExpandedModules {
+				cmds = append(cmds, m)
+			}
 
-				subcmds, err := mod.Subcommands()
-				if err != nil {
-					errs = append(errs, err)
-				}
+			subcmds, err := m.Subcommands()
+			if err != nil {
+				errs = append(errs, err)
+			}
 
-				fcmds, ferrs := expand(subcmds, depth-1, includeExpandedModules)
-				cmds = append(cmds, fcmds...)
-				errs = append(errs, ferrs...)
+			fcmds, ferrs := expand(subcmds, depth-1, includeExpandedModules)
+			cmds = append(cmds, fcmds...)
+			errs = append(errs, ferrs...)
 
-				// Store result at the correct index to maintain order
-				results[idx] = result{commands: cmds, errors: errs}
-			}(i, m)
-
+			return cmds, errs
 		} else {
-			results[i] = result{commands: Commands{cmd}, errors: []error{}}
+			return []Command{cmd}, []error{}
 		}
+	})
+}
+
+func parallelMap[T any, R any](inputs []T, fn func(T) ([]R, []error)) ([]R, []error) {
+	var wg sync.WaitGroup
+
+	results := make([]struct {
+		outs []R
+		errs []error
+	}, len(inputs))
+
+	for i, input := range inputs {
+		wg.Add(1)
+		go func(idx int, t T) {
+			defer wg.Done()
+			fouts, ferrs := fn(t)
+			results[idx].errs = append(results[idx].errs, ferrs...)
+			results[idx].outs = append(results[idx].outs, fouts...)
+		}(i, input)
 	}
 
 	wg.Wait()
 
-	all := Commands{}
-	errs := []error{}
-	for _, r := range results {
-		all = append(all, r.commands...)
-		errs = append(errs, r.errors...)
+	var outs []R
+	var errs []error
+	for _, result := range results {
+		outs = append(outs, result.outs...)
+		errs = append(errs, result.errs...)
 	}
 
-	return all, errs
+	return outs, errs
 }

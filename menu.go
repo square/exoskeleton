@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"sync"
 	"text/template"
 )
 
@@ -120,48 +119,35 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 	}
 
 	c, errs := c.Expand(WithDepth(opts.Depth), WithoutExpandedModules())
-	var items MenuItems
-	seen := make(map[string]bool)
 
-	type result struct {
-		item *MenuItem
-		err  error
-	}
-	results := make([]result, len(c))
-	var wg sync.WaitGroup
-
-	for i, cmd := range c {
-		name := UsageRelativeTo(cmd, m)
-		if _, ok := cmd.(Module); ok {
-			name += ":"
-		}
-
-		if seen[name] {
-			continue
-		}
-		seen[name] = true
-
-		wg.Add(1)
-		go func(i int, name string, cmd Command) {
-			defer wg.Done()
-
-			if summary, err := opts.SummaryFor(cmd); err != nil {
-				results[i] = result{err: err}
-			} else if summary != "" {
-				heading := opts.HeadingFor(m, cmd)
-				results[i] = result{item: &MenuItem{Name: name, Summary: summary, Heading: heading}}
+	allItems, ferrs :=
+		parallelMap(c, func(cmd Command) ([]*MenuItem, []error) {
+			name := UsageRelativeTo(cmd, m)
+			if _, ok := cmd.(Module); ok {
+				name += ":"
 			}
-		}(i, name, cmd)
-	}
 
-	wg.Wait()
+			summary, err := opts.SummaryFor(cmd)
+			if err != nil {
+				return nil, []error{err}
+			}
+			if summary == "" {
+				return nil, nil
+			}
 
-	for _, r := range results {
-		if r.err != nil {
-			errs = append(errs, r.err)
-		}
-		if r.item != nil {
-			items = append(items, r.item)
+			heading := opts.HeadingFor(m, cmd)
+			return []*MenuItem{{Name: name, Summary: summary, Heading: heading}}, nil
+		})
+
+	errs = append(errs, ferrs...)
+
+	// Remove duplicates after parallel processing
+	seen := make(map[string]bool)
+	var items MenuItems
+	for _, item := range allItems {
+		if item != nil && !seen[item.Name] {
+			seen[item.Name] = true
+			items = append(items, item)
 		}
 	}
 
