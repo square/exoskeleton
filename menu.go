@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"text/template"
 )
 
@@ -122,7 +123,14 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 	var items MenuItems
 	seen := make(map[string]bool)
 
-	for _, cmd := range c {
+	type result struct {
+		item *MenuItem
+		err  error
+	}
+	results := make([]result, len(c))
+	var wg sync.WaitGroup
+
+	for i, cmd := range c {
 		name := UsageRelativeTo(cmd, m)
 		if _, ok := cmd.(Module); ok {
 			name += ":"
@@ -133,11 +141,27 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 		}
 		seen[name] = true
 
-		if summary, err := opts.SummaryFor(cmd); err != nil {
-			errs = append(errs, err)
-		} else if summary != "" {
-			heading := opts.HeadingFor(m, cmd)
-			items = append(items, &MenuItem{Name: name, Summary: summary, Heading: heading})
+		wg.Add(1)
+		go func(i int, name string, cmd Command) {
+			defer wg.Done()
+
+			if summary, err := opts.SummaryFor(cmd); err != nil {
+				results[i] = result{err: err}
+			} else if summary != "" {
+				heading := opts.HeadingFor(m, cmd)
+				results[i] = result{item: &MenuItem{Name: name, Summary: summary, Heading: heading}}
+			}
+		}(i, name, cmd)
+	}
+
+	wg.Wait()
+
+	for _, r := range results {
+		if r.err != nil {
+			errs = append(errs, r.err)
+		}
+		if r.item != nil {
+			items = append(items, r.item)
 		}
 	}
 
