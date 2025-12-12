@@ -21,6 +21,7 @@ jobs:
           private-key: ${{ secrets.SQ_CHANGELOG_COMMITTER_PRIVATE_KEY }}
       - uses: actions/checkout@v4
         with:
+          ref: main # always check out the default branch even when triggered by tag push
           fetch-depth: 0 # clone the whole commit history
           token: ${{ steps.app-token.outputs.token }}
       - uses: cashapp/activate-hermit@v1
