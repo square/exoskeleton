@@ -1,5 +1,9 @@
 package exoskeleton
 
+import (
+	"sync"
+)
+
 type Commands []Command
 
 // Find returns the first command with a given name.
@@ -49,26 +53,58 @@ func WithoutExpandedModules() ExpandOption {
 }
 
 func expand(c Commands, depth int, includeExpandedModules bool) (Commands, []error) {
-	all := Commands{}
-	errs := []error{}
-
-	for _, cmd := range c {
+	return parallelMap(c, func(cmd Command) ([]Command, []error) {
+		// If this is a module, recursively flatten its subcommands...
 		if m, ok := cmd.(Module); ok && depth != 0 {
+			cmds := []Command{}
+			errs := []error{}
+
 			if includeExpandedModules {
-				all = append(all, cmd)
+				cmds = append(cmds, m)
 			}
 
 			subcmds, err := m.Subcommands()
 			if err != nil {
 				errs = append(errs, err)
 			}
+
 			fcmds, ferrs := expand(subcmds, depth-1, includeExpandedModules)
-			all = append(all, fcmds...)
+			cmds = append(cmds, fcmds...)
 			errs = append(errs, ferrs...)
+
+			return cmds, errs
 		} else {
-			all = append(all, cmd)
+			return []Command{cmd}, []error{}
 		}
+	})
+}
+
+func parallelMap[T any, R any](inputs []T, fn func(T) ([]R, []error)) ([]R, []error) {
+	var wg sync.WaitGroup
+
+	results := make([]struct {
+		outs []R
+		errs []error
+	}, len(inputs))
+
+	for i, input := range inputs {
+		wg.Add(1)
+		go func(idx int, t T) {
+			defer wg.Done()
+			fouts, ferrs := fn(t)
+			results[idx].errs = append(results[idx].errs, ferrs...)
+			results[idx].outs = append(results[idx].outs, fouts...)
+		}(i, input)
 	}
 
-	return all, errs
+	wg.Wait()
+
+	var outs []R
+	var errs []error
+	for _, result := range results {
+		outs = append(outs, result.outs...)
+		errs = append(errs, result.errs...)
+	}
+
+	return outs, errs
 }

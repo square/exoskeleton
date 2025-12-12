@@ -119,25 +119,35 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 	}
 
 	c, errs := c.Expand(WithDepth(opts.Depth), WithoutExpandedModules())
-	var items MenuItems
-	seen := make(map[string]bool)
 
-	for _, cmd := range c {
-		name := UsageRelativeTo(cmd, m)
-		if _, ok := cmd.(Module); ok {
-			name += ":"
-		}
+	allItems, ferrs :=
+		parallelMap(c, func(cmd Command) ([]*MenuItem, []error) {
+			name := UsageRelativeTo(cmd, m)
+			if _, ok := cmd.(Module); ok {
+				name += ":"
+			}
 
-		if seen[name] {
-			continue
-		}
-		seen[name] = true
+			summary, err := opts.SummaryFor(cmd)
+			if err != nil {
+				return nil, []error{err}
+			}
+			if summary == "" {
+				return nil, nil
+			}
 
-		if summary, err := opts.SummaryFor(cmd); err != nil {
-			errs = append(errs, err)
-		} else if summary != "" {
 			heading := opts.HeadingFor(m, cmd)
-			items = append(items, &MenuItem{Name: name, Summary: summary, Heading: heading})
+			return []*MenuItem{{Name: name, Summary: summary, Heading: heading}}, nil
+		})
+
+	errs = append(errs, ferrs...)
+
+	// Remove duplicates after parallel processing
+	seen := make(map[string]bool)
+	var items MenuItems
+	for _, item := range allItems {
+		if item != nil && !seen[item.Name] {
+			seen[item.Name] = true
+			items = append(items, item)
 		}
 	}
 
