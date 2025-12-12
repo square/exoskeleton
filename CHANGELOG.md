@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [unreleased]
+## [1.7.0](https://github.com/square/exoskeleton/compare/v1.6.6..v1.7.0)&nbsp;&nbsp;·&nbsp;&nbsp;2025-12-12
 
 - **perf:** Parallelize operations when we're evaluating subcommands' contracts (#46)&nbsp;&nbsp;·&nbsp;&nbsp;[b68e0ab](https://github.com/square/exoskeleton/commit/b68e0abfdcc46a0369d1885859c9e43ccc6bd60a)
 - **refactor:** Extract a parameterizeable `Expand` from `Flatten` and `expandModules` (#45)&nbsp;&nbsp;·&nbsp;&nbsp;[7792b0d](https://github.com/square/exoskeleton/commit/7792b0d36acf1ecdadfca82314ead235e994f0fc)
