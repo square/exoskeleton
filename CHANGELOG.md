@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## [unreleased]
 
+- **perf:** Parallelize operations when we're evaluating subcommands' contracts (#46)&nbsp;&nbsp;·&nbsp;&nbsp;[b68e0ab](https://github.com/square/exoskeleton/commit/b68e0abfdcc46a0369d1885859c9e43ccc6bd60a)
+- **refactor:** Extract a parameterizeable `Expand` from `Flatten` and `expandModules` (#45)&nbsp;&nbsp;·&nbsp;&nbsp;[7792b0d](https://github.com/square/exoskeleton/commit/7792b0d36acf1ecdadfca82314ead235e994f0fc)
 - **chore:** Add a workflow that maintains a CHANGELOG.md (#40)&nbsp;&nbsp;·&nbsp;&nbsp;[d34fbef](https://github.com/square/exoskeleton/commit/d34fbefd07d6b2ab95cf7da6b6280a34dfa1db55)
 
 ## [1.6.6](https://github.com/square/exoskeleton/compare/v1.6.5..v1.6.6)&nbsp;&nbsp;·&nbsp;&nbsp;2024-09-27
