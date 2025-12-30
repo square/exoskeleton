@@ -47,6 +47,7 @@ type Entrypoint struct {
 	executor                 ExecutorFunc
 	cmdsToAppend             []Command
 	cmdsToPrepend            []Command
+	contracts                []Contract
 }
 
 func (e *Entrypoint) Parent() Module                 { return nil }
@@ -95,6 +96,18 @@ func New(paths []string, options ...Option) (*Entrypoint, error) {
 
 	for _, op := range options {
 		op.Apply(self)
+	}
+
+	if len(self.contracts) == 0 {
+		self.contracts =
+			[]Contract{
+				&DirectoryContract{
+					MetadataFilename: self.moduleMetadataFilename,
+				},
+				&ExecutableContract{},
+				&ShellScriptContract{},
+				&StandaloneExecutableContract{},
+			}
 	}
 
 	// user-provided options may have overridden Name()

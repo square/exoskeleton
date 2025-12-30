@@ -7,7 +7,7 @@ import (
 type executableModule struct {
 	executableCommand
 	cmds       Commands
-	discoverer discoverer
+	discoverer DiscoveryContext
 }
 
 func (m *executableModule) Summary() (string, error) {
@@ -48,11 +48,11 @@ func (m *executableModule) discover() error {
 	}
 
 	m.summary = descriptor.Summary
-	m.cmds = m.discoverer.toCommands(m, descriptor.Commands, nil)
+	m.cmds = toCommands(m, descriptor.Commands, nil, m.discoverer)
 	return nil
 }
 
-func (d *discoverer) toCommands(parent *executableModule, descriptors []*commandDescriptor, args []string) Commands {
+func toCommands(parent *executableModule, descriptors []*commandDescriptor, args []string, d DiscoveryContext) Commands {
 	cmds := Commands{}
 	for _, descriptor := range descriptors {
 		c := &executableCommand{
@@ -65,10 +65,9 @@ func (d *discoverer) toCommands(parent *executableModule, descriptors []*command
 			executor:     parent.executor,
 		}
 
-		depth := d.depth + len(args)
-		if len(descriptor.Commands) > 0 && (d.maxDepth == -1 || depth < d.maxDepth) {
+		if len(descriptor.Commands) > 0 && d.MaxDepth() != 0 {
 			m := &executableModule{executableCommand: *c}
-			m.cmds = d.toCommands(m, descriptor.Commands, append(args, m.name))
+			m.cmds = toCommands(m, descriptor.Commands, append(args, m.name), d.Next())
 			cmds = append(cmds, m)
 		} else {
 			cmds = append(cmds, c)

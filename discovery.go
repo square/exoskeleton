@@ -1,51 +1,81 @@
 package exoskeleton
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-const executableModuleExtension = ".exoskeleton"
-
 type discoverer struct {
-	maxDepth   int
-	depth      int
-	onError    func(error)
-	executor   ExecutorFunc
-	modulefile string
+	maxDepth  int
+	onError   func(error)
+	executor  ExecutorFunc
+	contracts []Contract
 }
+
+type DiscoveryContext interface {
+	DiscoverIn(path string, parent Module) (Commands, []error)
+	Executor() ExecutorFunc
+	MaxDepth() int
+	Next() DiscoveryContext
+}
+
+func (d *discoverer) Next() DiscoveryContext {
+	return &discoverer{
+		maxDepth:  d.MaxDepth() - 1,
+		onError:   d.onError,
+		executor:  d.executor,
+		contracts: d.contracts,
+	}
+}
+
+var _ DiscoveryContext = &discoverer{}
 
 func (e *Entrypoint) discoverIn(paths []string) Commands {
 	all := Commands{}
 	d := &discoverer{
-		onError:    e.onError,
-		executor:   e.executor,
-		modulefile: e.moduleMetadataFilename,
-		maxDepth:   e.maxDepth,
+		onError:   e.onError,
+		executor:  e.executor,
+		maxDepth:  e.maxDepth,
+		contracts: e.contracts,
 	}
 	for _, path := range paths {
-		d.discoverIn(path, e, &all)
+		cmds, _ := d.DiscoverIn(path, e)
+		all = append(all, cmds...)
 	}
 	return all
 }
 
-func (d *discoverer) discoverIn(path string, parent Module, all *Commands) {
+func (d *discoverer) Executor() ExecutorFunc { return d.executor }
+func (d *discoverer) MaxDepth() int          { return d.maxDepth }
+
+func (d *discoverer) DiscoverIn(path string, parent Module) (Commands, []error) {
+	var all Commands
+	var errs []error
+
 	files, err := os.ReadDir(path)
 	if err != nil {
-		d.onError(DiscoveryError{Cause: err, Path: path})
+		if d.onError != nil {
+			d.onError(err)
+		}
+		errs = append(errs, DiscoveryError{Cause: err, Path: path})
 		// No return. We may have a partial list of files: "ReadDir returns the entries
 		// it was able to read before the error, along with the error"
 	}
 
 	for _, file := range files {
 		if cmd, err := d.buildCommand(path, parent, file); err != nil {
-			d.onError(err)
+			if d.onError != nil {
+				d.onError(err)
+			}
+			errs = append(errs, err)
 		} else if cmd != nil {
-			*all = append(*all, cmd)
+			all = append(all, cmd)
 		}
 	}
+
+	return all, errs
 }
 
 func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.DirEntry) (Command, error) {
@@ -60,73 +90,18 @@ func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.Di
 		}
 	}
 
-	if file.IsDir() {
-		modulefilePath := filepath.Join(path, d.modulefile)
-
-		// If the directory doesn't contain the modulefile, it is just a regular directory
-		if !exists(modulefilePath) {
-			return nil, nil
+	// Try each contract in order
+	for _, contract := range d.contracts {
+		if cmd, err := contract.BuildCommand(path, file, parent, d); err == nil {
+			return cmd, nil
+		} else if !errors.Is(err, ErrNotApplicable) {
+			return nil, DiscoveryError{Cause: err, Path: path} // Contract failed with real error
 		}
-
-		// Stop discovering modules if we've searched past maxDepth
-		if d.maxDepth >= 0 && d.depth >= d.maxDepth {
-			return nil, nil
-		}
-
-		return &directoryModule{
-			executableCommand: executableCommand{
-				parent:       parent,
-				path:         modulefilePath,
-				name:         name,
-				discoveredIn: discoveredIn,
-				executor:     d.executor,
-			},
-			discoverer: discoverer{
-				maxDepth:   d.maxDepth,
-				depth:      d.depth + 1,
-				onError:    d.onError,
-				executor:   d.executor,
-				modulefile: d.modulefile,
-			},
-		}, nil
-	} else {
-		if ok, err := isExecutable(file); err != nil {
-			return nil, DiscoveryError{Cause: err, Path: path}
-		} else if !ok {
-			// If the file isn't executable, it is just a regular file
-			return nil, nil
-		}
-
-		executable := &executableCommand{
-			parent:       parent,
-			path:         path,
-			name:         strings.TrimSuffix(name, executableModuleExtension),
-			discoveredIn: discoveredIn,
-			executor:     d.executor,
-		}
-
-		// if the executable has the extension ".exoskeleton" then we should treat it as a module.
-		if filepath.Ext(name) == executableModuleExtension && (d.maxDepth == -1 || d.depth < d.maxDepth) {
-			return &executableModule{
-				executableCommand: *executable,
-				discoverer: discoverer{
-					maxDepth:   d.maxDepth,
-					depth:      d.depth + 1,
-					onError:    d.onError,
-					executor:   d.executor,
-					modulefile: d.modulefile,
-				},
-			}, nil
-		}
-
-		return executable, nil
+		// Contract doesn't apply, try next one
 	}
-}
 
-type commandDescriptor struct {
-	Name     string               `json:"name"`
-	Summary  *string              `json:"summary,omitempty"`
-	Commands []*commandDescriptor `json:"commands,omitempty"`
+	// No contract applies. File is ignored.
+	return nil, nil
 }
 
 func followSymlinks(path string) (fs.DirEntry, error) {
@@ -145,9 +120,4 @@ func isExecutable(file fs.DirEntry) (bool, error) {
 	} else {
 		return info.Mode()&0111 != 0, nil // is x bit set for User, Group, or Other
 	}
-}
-
-func exists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil || !os.IsNotExist(err)
 }

@@ -41,4 +41,24 @@
 //	   Run example help <command> to print information on a specific command.
 //
 //	And running `example ls` will forward execution to `~/libexec/ls`.
+//
+// # Discovery Contracts
+//
+// Exoskeleton uses a contract system to determine how commands and modules are
+// discovered and built. Four default contracts are provided:
+//
+//   - DirectoryModuleContract: Directories containing a .exoskeleton file
+//   - ExecutableModuleContract: Executables with .exoskeleton extension
+//   - ScriptCommandContract: Shell scripts with magic comments (# SUMMARY:, # HELP:)
+//   - ExecutableCommandContract: Executables that respond to --summary and --help
+//
+// Users can customize discovery by providing their own contracts via WithContracts():
+//
+//	e, _ := exoskeleton.New(
+//	    paths,
+//	    exoskeleton.WithContracts(
+//	        &MyCustomContract{},
+//	        &exoskeleton.DirectoryModuleContract{},
+//	    ),
+//	)
 package exoskeleton

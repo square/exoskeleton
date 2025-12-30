@@ -9,7 +9,7 @@ import (
 type directoryModule struct {
 	executableCommand
 	cmds       Commands
-	discoverer discoverer
+	discoverer DiscoveryContext
 }
 
 func (m *directoryModule) Exec(e *Entrypoint, args, env []string) error {
@@ -29,8 +29,8 @@ func (m *directoryModule) Help() (string, error) {
 }
 
 func (m *directoryModule) Subcommands() (Commands, error) {
-	if m.cmds == nil {
-		m.discoverer.discoverIn(filepath.Dir(m.path), m, &m.cmds)
+	if m.cmds == nil && m.discoverer != nil {
+		m.cmds, _ = m.discoverer.DiscoverIn(filepath.Dir(m.path), m)
 		// TODO: return errors from discovery
 	}
 
