@@ -3,14 +3,32 @@ package exoskeleton
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"strings"
 
 	"github.com/square/exit"
 	"github.com/square/exoskeleton/pkg/shellcomp"
 )
+
+// Contract represents an agreement between Exoskeleton and a command about
+// how the command is discovered.
+//
+// Contracts are tried in order during discovery. The first contract that
+// doesn't return ErrNotApplicable builds the command.
+type Contract interface {
+	// BuildCommand constructs a Command using this contract's rules.
+	// Returns ErrNotApplicable if this contract doesn't handle the file/directory.
+	// Returns nil, nil if the file/directory should be ignored (e.g., non-executable file).
+	BuildCommand(path string, info fs.DirEntry, parent Module, d DiscoveryContext) (Command, error)
+}
+
+// ErrNotApplicable indicates that a contract does not apply to a given file/directory.
+// Discovery will try the next contract in the list.
+var ErrNotApplicable = errors.New("contract does not apply")
 
 // CommandError records an error that occurred with a command's implementation of its interface
 type CommandError struct {
@@ -61,7 +79,7 @@ func readSummaryFromModulefile(cmd *directoryModule) (string, error) {
 }
 
 func readSummaryFromExecutable(cmd *executableCommand) (string, error) {
-	summary, err := getMessageFromCommand(cmd, "summary")
+	summary, err := getMessageFromExecution(cmd, "summary")
 
 	if err != nil {
 		return "",
@@ -81,7 +99,7 @@ func readSummaryFromExecutable(cmd *executableCommand) (string, error) {
 }
 
 func readHelpFromExecutable(cmd *executableCommand) (string, error) {
-	help, err := getMessageFromCommand(cmd, "help")
+	help, err := getMessageFromExecution(cmd, "help")
 
 	if err != nil {
 		return "",
@@ -137,60 +155,70 @@ func describeCommands(m *executableModule) (*commandDescriptor, error) {
 	return descriptor, nil
 }
 
-// detectType reads the first two bytes from a file.
-// If they are `#!`, we can assume that the file is a shell script.
-//
-// Armed with this assumption, we can extract the command's documentation
-// using the magic comments approach.
-//
-// If the command is not a shell script, we will have to execute it
-// to request its documentation.
-func detectType(f *os.File) (fileType, error) {
-	buffer := make([]byte, 2)
-	_, err := f.Read(buffer)
-
-	if err != nil {
-		return unknown, fmt.Errorf("detectType: %w", err)
-	} else if string(buffer) == "#!" {
-		return script, nil
-	} else {
-		return binary, nil
-	}
+type commandDescriptor struct {
+	Name     string               `json:"name"`
+	Summary  *string              `json:"summary,omitempty"`
+	Commands []*commandDescriptor `json:"commands,omitempty"`
 }
 
-type fileType int
-
-const (
-	script fileType = iota
-	binary
-	unknown
-)
-
-func getMessageFromCommand(cmd *executableCommand, message string) (string, error) {
+func readSummaryFromShellScript(cmd *shellScriptCommand) (string, error) {
 	f, err := os.Open(cmd.path)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
 
-	t, err := detectType(f)
+	summary, err := getMessageFromMagicComments(f, "summary")
+	if err != nil {
+		return "",
+			exit.Wrap(
+				CommandSummaryError{
+					CommandError{
+						Message: fmt.Sprintf("summary('%s'): %s", Usage(cmd), err),
+						Command: cmd,
+						Cause:   err,
+					},
+				},
+				exit.InternalError,
+			)
+	}
+
+	// Fall back to executing with --summary if magic comments are empty
+	if summary == "" {
+		return getMessageFromExecution(&cmd.executableCommand, "summary")
+	}
+
+	return summary, nil
+}
+
+func readHelpFromShellScript(cmd *shellScriptCommand) (string, error) {
+	f, err := os.Open(cmd.path)
 	if err != nil {
 		return "", err
 	}
+	defer f.Close()
 
-	switch t {
-	case script:
-		s, err := getMessageFromMagicComments(f, message)
-		if s == "" {
-			return getMessageFromExecution(cmd, message)
-		} else {
-			return s, err
-		}
-	case binary:
-		return getMessageFromExecution(cmd, message)
-	default:
-		return "", fmt.Errorf("Invalid value for t: %v", t)
+	help, err := getMessageFromMagicComments(f, "help")
+	if err != nil {
+		return "",
+			exit.Wrap(
+				CommandHelpError{
+					CommandError{
+						Message: fmt.Sprintf("help('%s'): %s", Usage(cmd), err),
+						Command: cmd,
+						Cause:   err,
+					},
+				},
+				exit.InternalError,
+			)
 	}
+
+	// Fall back to executing with --help if magic comments are empty
+	if help == "" {
+		return getMessageFromExecution(&cmd.executableCommand, "help")
+	}
+
+	return help, nil
 }
 
 func getMessageFromMagicComments(f *os.File, message string) (string, error) {

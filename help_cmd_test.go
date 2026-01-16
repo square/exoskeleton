@@ -8,7 +8,12 @@ import (
 )
 
 func TestHelpForWithMagicComment(t *testing.T) {
-	cmd := &executableCommand{path: filepath.Join(fixtures, "edge-cases", "help-from-magic-comments"), executor: defaultExecutor}
+	cmd := &shellScriptCommand{
+		executableCommand: executableCommand{
+			path:     filepath.Join(fixtures, "edge-cases", "help-from-magic-comments"),
+			executor: defaultExecutor,
+		},
+	}
 	entrypoint := &Entrypoint{cmds: Commands{cmd}}
 	help, err := entrypoint.helpFor(cmd, nil)
 

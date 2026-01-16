@@ -141,3 +141,15 @@ func WithExecutor(value ExecutorFunc) Option {
 func WithModuleMetadataFilename(value string) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.moduleMetadataFilename = value })
 }
+
+// WithContracts sets the contracts used during discovery.
+// Contracts are tried in order; the first that doesn't return ErrNotApplicable builds the command.
+//
+// The default contracts are:
+//  1. DirectoryContract (directories that contain the module metadata file)
+//  2. ExecutableContract (executables with .exoskeleton extension which must implement --describe-commands)
+//  3. ShellScriptContract (shell scripts with magic comments)
+//  4. StandaloneExecutableContract (all other executables which must implement --summary)
+func WithContracts(contracts ...Contract) Option {
+	return (optionFunc)(func(e *Entrypoint) { e.contracts = contracts })
+}

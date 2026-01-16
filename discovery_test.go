@@ -94,8 +94,8 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 
 	for _, s := range scenarios {
 		var cmds Commands
-		d := discoverer{onError: func(_ error) {}, modulefile: ".exoskeleton", maxDepth: s.maxDepth, executor: defaultExecutor}
-		d.discoverIn(fixtures, nil, &cmds)
+		d := discoverer{maxDepth: s.maxDepth, executor: defaultExecutor, contracts: defaultContracts()}
+		cmds, _ = d.DiscoverIn(fixtures, nil)
 
 		var names []string
 		all, errs := cmds.Flatten()
@@ -111,9 +111,9 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 func TestDiscovererBuildsCommand(t *testing.T) {
 	var parent Module = &builtinModule{}
 
-	// We don't set `onError` or `executor` because no-nil functions can't be compared.
-	// That is: the expected `Command` will never be equal to the discovered one.
-	d := discoverer{modulefile: ".exoskeleton", maxDepth: 2}
+	// We don't set `executor` because no-nil functions can't be compared:
+	// the expected `Command` will never be equal to the discovered one.
+	d := discoverer{maxDepth: 2, contracts: defaultContracts()}
 
 	scenarios := []struct {
 		executable string
@@ -121,11 +121,13 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 	}{
 		{
 			"echoargs",
-			&executableCommand{
-				parent:       parent,
-				name:         "echoargs",
-				path:         filepath.Join(fixtures, "echoargs"),
-				discoveredIn: fixtures,
+			&shellScriptCommand{
+				executableCommand: executableCommand{
+					parent:       parent,
+					name:         "echoargs",
+					path:         filepath.Join(fixtures, "echoargs"),
+					discoveredIn: fixtures,
+				},
 			},
 		},
 		{
@@ -137,12 +139,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 					path:         filepath.Join(fixtures, "nested-1", ".exoskeleton"),
 					discoveredIn: fixtures,
 				},
-				discoverer: discoverer{
-					maxDepth:   d.maxDepth,
-					depth:      d.depth + 1,
-					onError:    d.onError,
-					modulefile: d.modulefile,
-				},
+				discoverer: d.Next(),
 			},
 		},
 		{
@@ -154,12 +151,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 					path:         filepath.Join(fixtures, "go.exoskeleton"),
 					discoveredIn: fixtures,
 				},
-				discoverer: discoverer{
-					maxDepth:   d.maxDepth,
-					depth:      d.depth + 1,
-					onError:    d.onError,
-					modulefile: d.modulefile,
-				},
+				discoverer: d.Next(),
 			},
 		},
 	}
@@ -178,8 +170,8 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 
 func TestFollowingSymlinks(t *testing.T) {
 	var cmds Commands
-	d := discoverer{modulefile: ".exoskeleton", maxDepth: 1}
-	d.discoverIn(filepath.Join(fixtures, "edge-cases"), nil, &cmds)
+	d := discoverer{maxDepth: 1, contracts: defaultContracts()}
+	cmds, _ = d.DiscoverIn(filepath.Join(fixtures, "edge-cases"), nil)
 
 	cmds, err := cmds.Find("symlink-test").(Module).Subcommands()
 	assert.NoError(t, err)
