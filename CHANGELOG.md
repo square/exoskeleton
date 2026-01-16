@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [unreleased]
+
+- **refactor:** Extract Contracts from discoverer and allow clients to supply their own (#48)&nbsp;&nbsp;·&nbsp;&nbsp;[b8f0e8b](https://github.com/square/exoskeleton/commit/b8f0e8b3a941792d9cd5ce35df0a3b09f5080bbf)
+
 ## [1.7.0](https://github.com/square/exoskeleton/compare/v1.6.6..v1.7.0)&nbsp;&nbsp;·&nbsp;&nbsp;2025-12-12
 
 - **perf:** Parallelize operations when we're evaluating subcommands' contracts (#46)&nbsp;&nbsp;·&nbsp;&nbsp;[b68e0ab](https://github.com/square/exoskeleton/commit/b68e0abfdcc46a0369d1885859c9e43ccc6bd60a)
