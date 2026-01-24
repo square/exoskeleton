@@ -10,7 +10,7 @@ import (
 
 func TestBuildMenuUsage(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
-	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
+	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module", cache: nullCache{}}}
 	entrypoint.cmds = Commands{module}
 
 	menu, _ := buildMenu(entrypoint, &MenuOptions{})
@@ -22,7 +22,7 @@ func TestBuildMenuUsage(t *testing.T) {
 
 func TestMenuForTrailer(t *testing.T) {
 	entrypoint := &Entrypoint{name: "entrypoint"}
-	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module"}}
+	module := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "module", cache: nullCache{}}}
 	entrypoint.cmds = Commands{module}
 
 	menu, _ := MenuFor(entrypoint, &MenuOptions{})

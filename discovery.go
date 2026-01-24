@@ -12,6 +12,7 @@ type discoverer struct {
 	onError   func(error)
 	executor  ExecutorFunc
 	contracts []Contract
+	cache     Cache
 }
 
 type DiscoveryContext interface {
@@ -19,6 +20,7 @@ type DiscoveryContext interface {
 	Executor() ExecutorFunc
 	MaxDepth() int
 	Next() DiscoveryContext
+	Cache() Cache
 }
 
 func (d *discoverer) Next() DiscoveryContext {
@@ -27,6 +29,7 @@ func (d *discoverer) Next() DiscoveryContext {
 		onError:   d.onError,
 		executor:  d.executor,
 		contracts: d.contracts,
+		cache:     d.cache,
 	}
 }
 
@@ -39,6 +42,7 @@ func (e *Entrypoint) discoverIn(paths []string) Commands {
 		executor:  e.executor,
 		maxDepth:  e.maxDepth,
 		contracts: e.contracts,
+		cache:     e.cache,
 	}
 	for _, path := range paths {
 		cmds, _ := d.DiscoverIn(path, e)
@@ -49,6 +53,12 @@ func (e *Entrypoint) discoverIn(paths []string) Commands {
 
 func (d *discoverer) Executor() ExecutorFunc { return d.executor }
 func (d *discoverer) MaxDepth() int          { return d.maxDepth }
+func (d *discoverer) Cache() Cache {
+	if d.cache == nil {
+		return nullCache{}
+	}
+	return d.cache
+}
 
 func (d *discoverer) DiscoverIn(path string, parent Module) (Commands, []error) {
 	var all Commands
