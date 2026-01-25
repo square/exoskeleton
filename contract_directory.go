@@ -14,7 +14,7 @@ type DirectoryContract struct {
 	MetadataFilename string
 }
 
-func (c *DirectoryContract) BuildCommand(path string, info fs.DirEntry, parent Module, d DiscoveryContext) (Command, error) {
+func (c *DirectoryContract) BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error) {
 	// Only applies to directories
 	if !info.IsDir() {
 		return nil, ErrNotApplicable
@@ -32,7 +32,7 @@ func (c *DirectoryContract) BuildCommand(path string, info fs.DirEntry, parent M
 		return nil, nil // Ignore due to depth limit
 	}
 
-	return &directoryModule{
+	return &directoryCommand{
 		executableCommand: executableCommand{
 			parent:       parent,
 			path:         modulefilePath,

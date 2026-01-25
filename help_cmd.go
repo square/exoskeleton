@@ -36,22 +36,24 @@ func HelpExec(e *Entrypoint, args, _ []string) error {
 }
 
 func (e *Entrypoint) helpFor(cmd Command, args []string) (string, error) {
-	if m, ok := cmd.(Module); ok {
-		return e.buildModuleHelp(m, args)
+	if subcmds, err := cmd.Subcommands(); err != nil {
+		return "", err
+	} else if len(subcmds) > 0 {
+		return e.buildModuleHelp(cmd, args)
 	} else {
 		return cmd.Help()
 	}
 }
 
-func (e *Entrypoint) printModuleHelp(m Module, args []string) error {
-	help, err := e.buildModuleHelp(m, args)
+func (e *Entrypoint) printModuleHelp(cmd Command, args []string) error {
+	help, err := e.buildModuleHelp(cmd, args)
 	printHelp(help)
 	return err
 }
 
-func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
+func (e *Entrypoint) buildModuleHelp(cmd Command, args []string) (string, error) {
 	// If `Subcommands()` will return an error, return early
-	if _, err := m.Subcommands(); err != nil {
+	if _, err := cmd.Subcommands(); err != nil {
 		return "", err
 	}
 
@@ -68,7 +70,7 @@ func (e *Entrypoint) buildModuleHelp(m Module, args []string) (string, error) {
 		}
 	}
 
-	menu, errs := MenuFor(m, opts)
+	menu, errs := MenuFor(cmd, opts)
 	for _, err := range errs {
 		e.onError(err)
 	}

@@ -23,7 +23,7 @@ type Contract interface {
 	// BuildCommand constructs a Command using this contract's rules.
 	// Returns ErrNotApplicable if this contract doesn't handle the file/directory.
 	// Returns nil, nil if the file/directory should be ignored (e.g., non-executable file).
-	BuildCommand(path string, info fs.DirEntry, parent Module, d DiscoveryContext) (Command, error)
+	BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error)
 }
 
 // ErrNotApplicable indicates that a contract does not apply to a given file/directory.
@@ -52,7 +52,7 @@ type CommandHelpError struct{ CommandError }
 // respond to `--describe-commands`
 type CommandDescribeError struct{ CommandError }
 
-func readSummaryFromModulefile(cmd *directoryModule) (string, error) {
+func readSummaryFromModulefile(cmd *directoryCommand) (string, error) {
 	var summary string
 
 	f, err := os.Open(cmd.path)
@@ -120,7 +120,7 @@ func readHelpFromExecutable(cmd *executableCommand) (string, error) {
 
 // describeCommandsRaw executes --describe-commands and returns the raw JSON output.
 // Errors are wrapped appropriately.
-func describeCommandsRaw(m *executableModule) (string, error) {
+func describeCommandsRaw(m *executableCommand) (string, error) {
 	cmd := m.Command("--describe-commands")
 	out, err := m.output(cmd)
 	if err != nil {
@@ -140,15 +140,15 @@ func describeCommandsRaw(m *executableModule) (string, error) {
 }
 
 // parseDescribeCommands parses the JSON output from --describe-commands.
-func parseDescribeCommands(m *executableModule, out string) (*commandDescriptor, error) {
+func parseDescribeCommands(cmd *executableCommand, out string) (*commandDescriptor, error) {
 	var descriptor *commandDescriptor
 	if err := json.Unmarshal([]byte(out), &descriptor); err != nil {
 		return &commandDescriptor{},
 			exit.Wrap(
 				CommandDescribeError{
 					CommandError{
-						Message: fmt.Sprintf("error parsing output from `%s --describe-commands`: %s", m.path, err),
-						Command: m,
+						Message: fmt.Sprintf("error parsing output from `%s --describe-commands`: %s", cmd.path, err),
+						Command: cmd,
 						Cause:   err,
 					},
 				},

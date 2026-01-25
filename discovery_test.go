@@ -109,7 +109,7 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 }
 
 func TestDiscovererBuildsCommand(t *testing.T) {
-	var parent Module = &builtinModule{}
+	var parent Command = &builtinCommand{}
 
 	// We don't set `executor` because no-nil functions can't be compared:
 	// the expected `Command` will never be equal to the discovered one.
@@ -133,7 +133,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 		},
 		{
 			"nested-1",
-			&directoryModule{
+			&directoryCommand{
 				executableCommand: executableCommand{
 					parent:       parent,
 					name:         "nested-1",
@@ -146,15 +146,13 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 		},
 		{
 			"go.exoskeleton",
-			&executableModule{
-				executableCommand: executableCommand{
-					parent:       parent,
-					name:         "go",
-					path:         filepath.Join(fixtures, "go.exoskeleton"),
-					discoveredIn: fixtures,
-					cache:        nullCache{},
-				},
-				discoverer: d.Next(),
+			&executableCommand{
+				parent:       parent,
+				name:         "go",
+				path:         filepath.Join(fixtures, "go.exoskeleton"),
+				discoveredIn: fixtures,
+				cache:        nullCache{},
+				discoverer:   d.Next(),
 			},
 		},
 	}
@@ -176,7 +174,7 @@ func TestFollowingSymlinks(t *testing.T) {
 	d := discoverer{maxDepth: 1, contracts: defaultContracts()}
 	cmds, _ = d.DiscoverIn(filepath.Join(fixtures, "edge-cases"), nil)
 
-	cmds, err := cmds.Find("symlink-test").(Module).Subcommands()
+	cmds, err := cmds.Find("symlink-test").Subcommands()
 	assert.NoError(t, err)
 
 	cmd := cmds.Find("hello-prime")

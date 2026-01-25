@@ -42,26 +42,28 @@ func (e *Entrypoint) Identify(args []string) (Command, []string, error) {
 //
 // Returns a CommandError if the command does not fulfill the contract
 // for providing its subcommands.
-func identify(m Module, args []string) (Command, []string, error) {
+func identify(cmd Command, args []string) (Command, []string, error) {
 	if len(args) == 0 || isFlag(args[0]) {
-		return m, args, nil
+		return cmd, args, nil
 	}
 
 	// Rewrite args like {"module:subcommand", "--flag"} to {"module", "subcommand", "--flag"}.
 	// Do this just-in-time, non-destructively, while we're working on identifying a command.
 	name, rest := args[0], args[1:]
 	if strings.Contains(name, ":") {
-		return identify(m, append(without(strings.Split(name, ":"), ""), rest...))
+		return identify(cmd, append(without(strings.Split(name, ":"), ""), rest...))
 	}
 
-	if cmds, err := m.Subcommands(); err != nil {
-		return m, args, err
-	} else if cmd := cmds.Find(name); cmd == nil {
-		return nullCommand{parent: m, name: name}, rest, nil
-	} else if submodule, ok := cmd.(Module); ok {
-		return identify(submodule, rest)
+	if cmds, err := cmd.Subcommands(); err != nil {
+		return cmd, args, err
+	} else if found := cmds.Find(name); found == nil {
+		return nullCommand{parent: cmd, name: name}, rest, nil
+	} else if subcmds, err := found.Subcommands(); err != nil {
+		return found, rest, err
+	} else if len(subcmds) > 0 {
+		return identify(found, rest)
 	} else {
-		return cmd, rest, nil
+		return found, rest, nil
 	}
 }
 

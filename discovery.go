@@ -16,7 +16,7 @@ type discoverer struct {
 }
 
 type DiscoveryContext interface {
-	DiscoverIn(path string, parent Module) (Commands, []error)
+	DiscoverIn(path string, parent Command) (Commands, []error)
 	Executor() ExecutorFunc
 	MaxDepth() int
 	Next() DiscoveryContext
@@ -60,7 +60,7 @@ func (d *discoverer) Cache() Cache {
 	return d.cache
 }
 
-func (d *discoverer) DiscoverIn(path string, parent Module) (Commands, []error) {
+func (d *discoverer) DiscoverIn(path string, parent Command) (Commands, []error) {
 	var all Commands
 	var errs []error
 
@@ -88,7 +88,7 @@ func (d *discoverer) DiscoverIn(path string, parent Module) (Commands, []error) 
 	return all, errs
 }
 
-func (d *discoverer) buildCommand(discoveredIn string, parent Module, file fs.DirEntry) (Command, error) {
+func (d *discoverer) buildCommand(discoveredIn string, parent Command, file fs.DirEntry) (Command, error) {
 	name := file.Name()
 	path := filepath.Join(discoveredIn, name)
 

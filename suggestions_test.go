@@ -9,7 +9,7 @@ import (
 
 func TestSuggestionsFor(t *testing.T) {
 	entrypoint := &Entrypoint{name: "e"}
-	spec := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "spec"}}
+	spec := &directoryCommand{executableCommand: executableCommand{parent: entrypoint, name: "spec"}}
 	echoargs := &executableCommand{parent: spec, name: "echoargs"}
 	spec.cmds = Commands{echoargs}
 	// Should never be returned because `spec` precedes it.

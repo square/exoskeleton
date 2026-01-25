@@ -11,17 +11,19 @@ import (
 
 // executableCommand implements the Command interface for a file that can be executed.
 type executableCommand struct {
-	parent       Module
+	parent       Command
 	path         string
 	name         string
 	args         []string
 	summary      *string
 	discoveredIn string
 	executor     ExecutorFunc
+	cmds         Commands
+	discoverer   DiscoveryContext
 	cache        Cache
 }
 
-func (cmd *executableCommand) Parent() Module       { return cmd.parent }
+func (cmd *executableCommand) Parent() Command      { return cmd.parent }
 func (cmd *executableCommand) Path() string         { return cmd.path }
 func (cmd *executableCommand) Name() string         { return cmd.name }
 func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
@@ -32,7 +34,11 @@ func (cmd *executableCommand) Command(args ...string) *exec.Cmd {
 }
 
 // Exec invokes the executable with the given arguments and environment.
-func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
+// If this is a module (has discoverer), it prints the module help instead.
+func (cmd *executableCommand) Exec(e *Entrypoint, args, env []string) error {
+	if cmd.discoverer != nil {
+		return e.printModuleHelp(cmd, args)
+	}
 	command := cmd.Command(args...)
 	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
@@ -44,6 +50,9 @@ func (cmd *executableCommand) Exec(_ *Entrypoint, args, env []string) error {
 // Complete invokes the executable with `--complete` as its first argument
 // and parses its output according to Cobra's ShellComp API.
 func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error) {
+	if cmd.discoverer != nil {
+		return completionsForSubcommands(cmd, args)
+	}
 	return getCompletionsFromExecutable(cmd, args, env)
 }
 
@@ -57,6 +66,12 @@ func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]str
 // The executable is expected to write the summary to standard output and exit
 // successfully.
 func (cmd *executableCommand) Summary() (string, error) {
+	if cmd.discoverer != nil && cmd.cmds == nil {
+		if err := cmd.discover(); err != nil {
+			return "", err
+		}
+	}
+
 	if cmd.summary != nil {
 		return *cmd.summary, nil
 	}
@@ -76,6 +91,20 @@ func (cmd *executableCommand) Summary() (string, error) {
 // successfully.
 func (cmd *executableCommand) Help() (string, error) {
 	return readHelpFromExecutable(cmd)
+}
+
+// Subcommands returns the list of subcommands for this command.
+// Returns an empty slice for leaf commands.
+func (cmd *executableCommand) Subcommands() (Commands, error) {
+	if cmd.discoverer == nil {
+		return Commands{}, nil // Leaf command
+	}
+	if cmd.cmds == nil {
+		if err := cmd.discover(); err != nil {
+			return nil, err
+		}
+	}
+	return cmd.cmds, nil
 }
 
 func (cmd *executableCommand) run(c *exec.Cmd) error {
@@ -99,4 +128,49 @@ func (cmd *executableCommand) output(c *exec.Cmd) ([]byte, error) {
 		ee.Stderr = stderr.Bytes()
 	}
 	return stdout.Bytes(), err
+}
+
+// discover invokes an executable with `--describe-commands` and constructs a tree
+// of modules and subcommands (all to be invoked through the given executable)
+// from the JSON output.
+func (cmd *executableCommand) discover() error {
+	out, err := cmd.cache.Fetch(cmd, "describe-commands", func() (string, error) {
+		return describeCommandsRaw(cmd)
+	})
+
+	if err != nil {
+		return err
+	}
+
+	descriptor, err := parseDescribeCommands(cmd, out)
+	if err != nil {
+		return err
+	}
+
+	cmd.summary = descriptor.Summary
+	cmd.cmds = toCommands(cmd, descriptor.Commands, nil, cmd.discoverer)
+	return nil
+}
+
+func toCommands(parent *executableCommand, descriptors []*commandDescriptor, args []string, d DiscoveryContext) Commands {
+	cmds := Commands{}
+	for _, descriptor := range descriptors {
+		c := &executableCommand{
+			parent:       parent,
+			discoveredIn: parent.discoveredIn,
+			path:         parent.path,
+			args:         append(args, descriptor.Name),
+			name:         descriptor.Name,
+			summary:      descriptor.Summary,
+			executor:     parent.executor,
+			cache:        parent.cache,
+		}
+
+		if len(descriptor.Commands) > 0 && d.MaxDepth() != 0 {
+			c.discoverer = d.Next()
+			c.cmds = toCommands(c, descriptor.Commands, append(args, c.name), d.Next())
+		}
+		cmds = append(cmds, c)
+	}
+	return cmds
 }

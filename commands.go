@@ -54,18 +54,13 @@ func WithoutExpandedModules() ExpandOption {
 
 func expand(c Commands, depth int, includeExpandedModules bool) (Commands, []error) {
 	return parallelMap(c, func(cmd Command) ([]Command, []error) {
-		// If this is a module, recursively flatten its subcommands...
-		if m, ok := cmd.(Module); ok && depth != 0 {
+		// If this command has subcommands, recursively flatten them...
+		if subcmds, err := cmd.Subcommands(); err == nil && len(subcmds) > 0 && depth != 0 {
 			cmds := []Command{}
 			errs := []error{}
 
 			if includeExpandedModules {
-				cmds = append(cmds, m)
-			}
-
-			subcmds, err := m.Subcommands()
-			if err != nil {
-				errs = append(errs, err)
+				cmds = append(cmds, cmd)
 			}
 
 			fcmds, ferrs := expand(subcmds, depth-1, includeExpandedModules)
@@ -73,6 +68,8 @@ func expand(c Commands, depth int, includeExpandedModules bool) (Commands, []err
 			errs = append(errs, ferrs...)
 
 			return cmds, errs
+		} else if err != nil {
+			return []Command{cmd}, []error{err}
 		} else {
 			return []Command{cmd}, []error{}
 		}
