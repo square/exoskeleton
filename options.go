@@ -153,3 +153,9 @@ func WithModuleMetadataFilename(value string) Option {
 func WithContracts(contracts ...Contract) Option {
 	return (optionFunc)(func(e *Entrypoint) { e.contracts = contracts })
 }
+
+// WithCache sets a cache for expensive operations like command execution.
+// If not set, no caching is performed.
+func WithCache(c Cache) Option {
+	return (optionFunc)(func(e *Entrypoint) { e.cache = c })
+}

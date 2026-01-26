@@ -118,27 +118,31 @@ func readHelpFromExecutable(cmd *executableCommand) (string, error) {
 	return help, nil
 }
 
-func describeCommands(m *executableModule) (*commandDescriptor, error) {
+// describeCommandsRaw executes --describe-commands and returns the raw JSON output.
+// Errors are wrapped appropriately.
+func describeCommandsRaw(m *executableModule) (string, error) {
 	cmd := m.Command("--describe-commands")
 	out, err := m.output(cmd)
 	if err != nil {
 		err = fmt.Errorf("exec '%s': %w", strings.Join(cmd.Args, " "), err)
-
-		return &commandDescriptor{},
-			exit.Wrap(
-				CommandDescribeError{
-					CommandError{
-						Message: err.Error(),
-						Command: m,
-						Cause:   err,
-					},
+		return "", exit.Wrap(
+			CommandDescribeError{
+				CommandError{
+					Message: err.Error(),
+					Command: m,
+					Cause:   err,
 				},
-				exit.InternalError,
-			)
+			},
+			exit.InternalError,
+		)
 	}
+	return string(out), nil
+}
 
+// parseDescribeCommands parses the JSON output from --describe-commands.
+func parseDescribeCommands(m *executableModule, out string) (*commandDescriptor, error) {
 	var descriptor *commandDescriptor
-	if err := json.Unmarshal(out, &descriptor); err != nil {
+	if err := json.Unmarshal([]byte(out), &descriptor); err != nil {
 		return &commandDescriptor{},
 			exit.Wrap(
 				CommandDescribeError{
@@ -151,7 +155,6 @@ func describeCommands(m *executableModule) (*commandDescriptor, error) {
 				exit.InternalError,
 			)
 	}
-
 	return descriptor, nil
 }
 

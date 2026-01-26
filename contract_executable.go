@@ -44,6 +44,7 @@ func (c *ExecutableContract) BuildCommand(path string, info fs.DirEntry, parent 
 			name:         commandName,
 			discoveredIn: filepath.Dir(path),
 			executor:     d.Executor(),
+			cache:        d.Cache(),
 		}, nil
 	}
 
@@ -54,6 +55,7 @@ func (c *ExecutableContract) BuildCommand(path string, info fs.DirEntry, parent 
 			name:         commandName,
 			discoveredIn: filepath.Dir(path),
 			executor:     d.Executor(),
+			cache:        d.Cache(),
 		},
 		discoverer: d.Next(),
 	}, nil

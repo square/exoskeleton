@@ -48,6 +48,7 @@ type Entrypoint struct {
 	cmdsToAppend             []Command
 	cmdsToPrepend            []Command
 	contracts                []Contract
+	cache                    Cache
 }
 
 func (e *Entrypoint) Parent() Module                 { return nil }
@@ -136,6 +137,7 @@ func newWithDefaults(path string) *Entrypoint {
 		executor:               defaultExecutor,
 		cmdsToPrepend:          []Command{},
 		cmdsToAppend:           []Command{},
+		cache:                  nullCache{},
 	}
 }
 

@@ -42,7 +42,15 @@ func (m *executableModule) Subcommands() (Commands, error) {
 // of modules and subcommands (all to be invoked through the given executable)
 // from the JSON output.
 func (m *executableModule) discover() error {
-	descriptor, err := describeCommands(m)
+	out, err := m.cache.Fetch(m, "describe-commands", func() (string, error) {
+		return describeCommandsRaw(m)
+	})
+
+	if err != nil {
+		return err
+	}
+
+	descriptor, err := parseDescribeCommands(m, out)
 	if err != nil {
 		return err
 	}
@@ -63,6 +71,7 @@ func toCommands(parent *executableModule, descriptors []*commandDescriptor, args
 			name:         descriptor.Name,
 			summary:      descriptor.Summary,
 			executor:     parent.executor,
+			cache:        parent.cache,
 		}
 
 		if len(descriptor.Commands) > 0 && d.MaxDepth() != 0 {

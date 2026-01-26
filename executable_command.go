@@ -18,6 +18,7 @@ type executableCommand struct {
 	summary      *string
 	discoveredIn string
 	executor     ExecutorFunc
+	cache        Cache
 }
 
 func (cmd *executableCommand) Parent() Module       { return cmd.parent }
@@ -60,7 +61,9 @@ func (cmd *executableCommand) Summary() (string, error) {
 		return *cmd.summary, nil
 	}
 
-	return readSummaryFromExecutable(cmd)
+	return cmd.cache.Fetch(cmd, "summary", func() (string, error) {
+		return readSummaryFromExecutable(cmd)
+	})
 }
 
 // Help returns the help text for the command.

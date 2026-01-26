@@ -21,7 +21,9 @@ func (m *directoryModule) Complete(_ *Entrypoint, args, _ []string) ([]string, s
 }
 
 func (m *directoryModule) Summary() (string, error) {
-	return readSummaryFromModulefile(m)
+	return m.cache.Fetch(m, "summary", func() (string, error) {
+		return readSummaryFromModulefile(m)
+	})
 }
 
 func (m *directoryModule) Help() (string, error) {

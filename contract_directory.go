@@ -39,6 +39,7 @@ func (c *DirectoryContract) BuildCommand(path string, info fs.DirEntry, parent M
 			name:         filepath.Base(path),
 			discoveredIn: filepath.Dir(path),
 			executor:     d.Executor(),
+			cache:        d.Cache(),
 		},
 		discoverer: d.Next(),
 	}, nil

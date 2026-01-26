@@ -47,6 +47,7 @@ func (c *ShellScriptContract) BuildCommand(path string, info fs.DirEntry, parent
 			name:         filepath.Base(path),
 			discoveredIn: filepath.Dir(path),
 			executor:     d.Executor(),
+			cache:        d.Cache(),
 		},
 	}, nil
 }
@@ -63,7 +64,9 @@ func (cmd *shellScriptCommand) Summary() (string, error) {
 		return *cmd.summary, nil
 	}
 
-	return readSummaryFromShellScript(cmd)
+	return cmd.cache.Fetch(cmd, "summary", func() (string, error) {
+		return readSummaryFromShellScript(cmd)
+	})
 }
 
 func (cmd *shellScriptCommand) Help() (string, error) {

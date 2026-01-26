@@ -30,5 +30,6 @@ func (c *StandaloneExecutableContract) BuildCommand(path string, info fs.DirEntr
 		name:         filepath.Base(path),
 		discoveredIn: filepath.Dir(path),
 		executor:     d.Executor(),
+		cache:        d.Cache(),
 	}, nil
 }
