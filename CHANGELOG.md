@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [unreleased]
+## [1.9.0](https://github.com/square/exoskeleton/compare/v1.8.0..v1.9.0)&nbsp;&nbsp;·&nbsp;&nbsp;2026-01-26
 
 - **feat:** Add `WithCache` and implement caching at the contract level (#49)&nbsp;&nbsp;·&nbsp;&nbsp;[6e51e80](https://github.com/square/exoskeleton/commit/6e51e80a471a30d84172d82a9d3b707e06688775)
 
