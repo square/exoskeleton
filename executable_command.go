@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
 // executableCommand implements the Command interface for a file that can be executed.

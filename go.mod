@@ -1,4 +1,4 @@
-module github.com/square/exoskeleton
+module github.com/square/exoskeleton/v2
 
 go 1.24.0
 

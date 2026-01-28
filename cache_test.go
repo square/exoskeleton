@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/square/exit"
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
 // CompleteHelp is the help text for the built-in 'complete' command.

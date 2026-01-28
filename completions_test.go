@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 	"github.com/stretchr/testify/assert"
 )
 

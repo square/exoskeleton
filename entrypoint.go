@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
 // CommandNotFoundFunc is a function that accepts a Null Command object. It is called when a command is not found.

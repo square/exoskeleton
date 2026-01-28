@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/square/exit"
-	"github.com/square/exoskeleton"
+	"github.com/square/exoskeleton/v2"
 )
 
 func main() {
