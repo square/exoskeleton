@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. See [conven
 ## [unreleased]
 
 - **refactor** [**breaking**]**:** Collapse the `Module` interface into the `Command` interface (#50)&nbsp;&nbsp;·&nbsp;&nbsp;[f73217b](https://github.com/square/exoskeleton/commit/f73217b7d1fa9fea8526e24260731120bbfe04d8)
+- **chore:** Bump version to 2.0 (#51)&nbsp;&nbsp;·&nbsp;&nbsp;[d3259c7](https://github.com/square/exoskeleton/commit/d3259c7bbbabd9d3e55bc6a13152e92fb9719f67)
 
 ## [1.9.0](https://github.com/square/exoskeleton/compare/v1.8.0..v1.9.0)&nbsp;&nbsp;·&nbsp;&nbsp;2026-01-26
 
