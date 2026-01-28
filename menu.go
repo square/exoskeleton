@@ -37,8 +37,8 @@ type MenuOptions struct {
 	// -1 lists all descendants.
 	Depth int
 
-	// HeadingFor accepts a Command the Module the menu is being prepared for
-	// and returns a string to use as a section heading for the Command.
+	// HeadingFor accepts the parent Command and a subcommand, returning a
+	// string to use as a section heading for the subcommand.
 	// The default function returns "COMMANDS".
 	HeadingFor MenuHeadingForFunc
 
@@ -47,7 +47,7 @@ type MenuOptions struct {
 	SummaryFor SummaryFunc
 
 	// Template is executed with the constructed exoskeleton.Menu to render
-	// help content for a Module.
+	// help content for a Command with subcommands.
 	Template *template.Template
 }
 
@@ -89,13 +89,13 @@ type MenuItem struct {
 	Width   int
 }
 
-// MenuFor renders a menu of commands for a Module.
-func MenuFor(m Module, opts *MenuOptions) (string, []error) {
+// MenuFor renders a menu of commands for a Command with subcommands.
+func MenuFor(cmd Command, opts *MenuOptions) (string, []error) {
 	if opts.Template == nil {
 		opts.Template = template.Must(template.New("menu").Funcs(templateFuncs).Parse(menuTemplate))
 	}
 
-	menu, errs := buildMenu(m, opts)
+	menu, errs := buildMenu(cmd, opts)
 	b := new(bytes.Buffer)
 	if err := opts.Template.Execute(b, menu); err != nil {
 		panic(err)
@@ -103,17 +103,17 @@ func MenuFor(m Module, opts *MenuOptions) (string, []error) {
 	return b.String(), errs
 }
 
-// buildMenu constructs a Menu of Commands with their short summary strings for a given Module.
-func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
+// buildMenu constructs a Menu of Commands with their short summary strings for a given Command with subcommands.
+func buildMenu(cmd Command, opts *MenuOptions) (*Menu, []error) {
 	if opts.SummaryFor == nil {
-		opts.SummaryFor = func(cmd Command) (string, error) { return cmd.Summary() }
+		opts.SummaryFor = func(c Command) (string, error) { return c.Summary() }
 	}
 
 	if opts.HeadingFor == nil {
-		opts.HeadingFor = func(Module, Command) string { return "COMMANDS" }
+		opts.HeadingFor = func(Command, Command) string { return "COMMANDS" }
 	}
 
-	c, err := m.Subcommands()
+	c, err := cmd.Subcommands()
 	if err != nil {
 		return &Menu{}, []error{err}
 	}
@@ -121,13 +121,13 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 	c, errs := c.Expand(WithDepth(opts.Depth), WithoutExpandedModules())
 
 	allItems, ferrs :=
-		parallelMap(c, func(cmd Command) ([]*MenuItem, []error) {
-			name := UsageRelativeTo(cmd, m)
-			if _, ok := cmd.(Module); ok {
+		parallelMap(c, func(subcmd Command) ([]*MenuItem, []error) {
+			name := UsageRelativeTo(subcmd, cmd)
+			if subcmds, _ := subcmd.Subcommands(); len(subcmds) > 0 {
 				name += ":"
 			}
 
-			summary, err := opts.SummaryFor(cmd)
+			summary, err := opts.SummaryFor(subcmd)
 			if err != nil {
 				return nil, []error{err}
 			}
@@ -135,7 +135,7 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 				return nil, nil
 			}
 
-			heading := opts.HeadingFor(m, cmd)
+			heading := opts.HeadingFor(nil, subcmd)
 			return []*MenuItem{{Name: name, Summary: summary, Heading: heading}}, nil
 		})
 
@@ -173,13 +173,13 @@ func buildMenu(m Module, opts *MenuOptions) (*Menu, []error) {
 	}
 
 	return &Menu{
-		Usage:     Usage(m) + " <command> [<args>]",
+		Usage:     Usage(cmd) + " <command> [<args>]",
 		Sections:  sections,
-		HelpUsage: helpUsage(m),
+		HelpUsage: helpUsage(cmd),
 	}, errs
 }
 
-func helpUsage(m Module) string {
-	args := argsRelativeTo(m, nil)
+func helpUsage(cmd Command) string {
+	args := argsRelativeTo(cmd, nil)
 	return strings.Join(append([]string{args[0], "help"}, args[1:]...), " ")
 }

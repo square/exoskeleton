@@ -12,7 +12,7 @@ import (
 // They provide metadata via magic comments like "# SUMMARY:" and "# HELP:".
 type ShellScriptContract struct{}
 
-func (c *ShellScriptContract) BuildCommand(path string, info fs.DirEntry, parent Module, d DiscoveryContext) (Command, error) {
+func (c *ShellScriptContract) BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error) {
 	// Only applies to files
 	if info.IsDir() {
 		return nil, ErrNotApplicable

@@ -34,15 +34,15 @@ func (e *Entrypoint) completionsFor(args, env []string, completeArgs bool) ([]st
 		return nil, shellcomp.DirectiveError, err
 	}
 
-	if _, isModule := finalCmd.(Module); !isModule && !completeArgs {
+	if subcmds, _ := finalCmd.Subcommands(); len(subcmds) == 0 && !completeArgs {
 		return nil, shellcomp.DirectiveNoFileComp, nil
 	}
 
 	return finalCmd.Complete(e, append(finalCmdArgs, toComplete), env)
 }
 
-func completionsForModule(m Module, args []string) ([]string, shellcomp.Directive, error) {
-	cmds, err := m.Subcommands()
+func completionsForSubcommands(cmd Command, args []string) ([]string, shellcomp.Directive, error) {
+	cmds, err := cmd.Subcommands()
 	if err != nil {
 		return nil, shellcomp.DirectiveError, err
 	}

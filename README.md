@@ -134,6 +134,32 @@ As each subcommand maps to a standalone executable, _submenus_ map to directorie
 
 Take a look at the `dir` module in [the Hello World example project][hello_world].
 
+## Upgrading from v1 to v2
+
+Exoskeleton v2 merged the `Module` interface into the `Command` interface. `exoskeleton.Module` has been removed and `Command` implements `Subcommands() (Commands, error)`. Leaf commands implement this simply by returning a non-empty slice (`Commands{}`).
+
+Along with that change,
+- `exoskeleton.EmbeddedModule` was merged into `exoskeleton.EmbeddedCommand`
+- the `exoskeleton.IsModule` helper was removed
+- `Parent()` returns a `Command` instead of a `Module`
+
+### Migration Examples
+
+#### Type assertions
+If you used `exoskeleton.Module` for type assertions, you can now check whether a command has any subcommands.
+```go
+// v1
+if m, ok := cmd.(exoskeleton.Module); ok {
+    children, _ := m.Subcommands()
+    // ...
+}
+
+// v2
+if children, _ := cmd.Subcommands(); len(children) > 0 {
+    // ...
+}
+```
+
 
 [cobra]: https://github.com/spf13/cobra
 [exit]: https://github.com/square/exit#the-codes

@@ -24,9 +24,9 @@ type ErrorFunc func(*Entrypoint, error)
 // under which a command should be listed when it is printed in a menu.
 // (The default value is "COMMANDS".)
 //
-// It accepts the Module whose subcommands are being listed and the Command
-// whose heading should be returned.
-type MenuHeadingForFunc func(Module, Command) string
+// It accepts the parent Command whose subcommands are being listed and the
+// Command whose heading should be returned.
+type MenuHeadingForFunc func(parent Command, cmd Command) string
 
 type ExecutorFunc func(*exec.Cmd) error
 
@@ -51,7 +51,7 @@ type Entrypoint struct {
 	cache                    Cache
 }
 
-func (e *Entrypoint) Parent() Module                 { return nil }
+func (e *Entrypoint) Parent() Command                { return nil }
 func (e *Entrypoint) Path() string                   { return e.path }
 func (e *Entrypoint) Name() string                   { return e.name }
 func (e *Entrypoint) Summary() (string, error)       { panic("Unused") }
@@ -174,7 +174,7 @@ func (e *Entrypoint) Exec(_ *Entrypoint, rawArgs, env []string) error {
 }
 
 func (e *Entrypoint) Complete(_ *Entrypoint, args, _ []string) (completions []string, directive shellcomp.Directive, err error) {
-	completions, directive, err = completionsForModule(e, args)
+	completions, directive, err = completionsForSubcommands(e, args)
 	completions = without(completions, `complete`) // Don't suggest the `complete` command
 	return
 }

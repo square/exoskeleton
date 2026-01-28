@@ -127,7 +127,7 @@ type testContract struct {
 	matches func(path string, info fs.DirEntry) bool
 }
 
-func (c *testContract) BuildCommand(path string, info fs.DirEntry, parent Module, d DiscoveryContext) (Command, error) {
+func (c *testContract) BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error) {
 	if c.matches != nil && !c.matches(path, info) {
 		return nil, ErrNotApplicable
 	}

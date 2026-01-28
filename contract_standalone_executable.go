@@ -11,7 +11,7 @@ import (
 // in the contract list, as it matches all executable files.
 type StandaloneExecutableContract struct{}
 
-func (c *StandaloneExecutableContract) BuildCommand(path string, info fs.DirEntry, parent Module, d DiscoveryContext) (Command, error) {
+func (c *StandaloneExecutableContract) BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error) {
 	// Only applies to files
 	if info.IsDir() {
 		return nil, ErrNotApplicable

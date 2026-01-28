@@ -28,14 +28,7 @@ type EmbeddedCommand struct {
 	Help     string
 	Exec     ExecFunc
 	Complete CompleteFunc
-}
-
-// EmbeddedCommand defines a built-in module that can be added to an Entrypoint
-// (as opposed to a directory external to the Entrypoint).
-type EmbeddedModule struct {
-	Name     string
-	Summary  string
-	Commands []interface{}
+	Commands []*EmbeddedCommand
 }
 
 // Apply invokes the optionFunc with the given Entrypoint.
@@ -46,7 +39,7 @@ func (fn optionFunc) Apply(e *Entrypoint) {
 // AppendCommands adds new embedded commands to the Entrypoint. The commands are added to
 // the end of the list and will have the lowest precedence: an executable with the same name
 // as one of these commands would override it.
-func AppendCommands(cmds ...interface{}) Option {
+func AppendCommands(cmds ...*EmbeddedCommand) Option {
 	return (optionFunc)(func(e *Entrypoint) {
 		e.cmdsToAppend = append(e.cmdsToAppend, buildCommands(e, cmds)...)
 	})
@@ -55,26 +48,21 @@ func AppendCommands(cmds ...interface{}) Option {
 // PrependCommands adds new embedded commands to the Entrypoint. The command are added to
 // the front of the list and will have the highest precedence: an executable with the same name
 // as one of these commands would be overridden by it.
-func PrependCommands(cmds ...interface{}) Option {
+func PrependCommands(cmds ...*EmbeddedCommand) Option {
 	return (optionFunc)(func(e *Entrypoint) {
 		e.cmdsToPrepend = append(buildCommands(e, cmds), e.cmdsToPrepend...)
 	})
 }
 
-func buildCommands(m Module, cmds []interface{}) []Command {
+func buildCommands(parent Command, cmds []*EmbeddedCommand) []Command {
 	var result []Command
 
 	for _, cmd := range cmds {
-		switch v := cmd.(type) {
-		case *EmbeddedCommand:
-			result = append(result, &builtinCommand{m, v})
-		case *EmbeddedModule:
-			module := &builtinModule{m, v, nil}
-			module.subcommands = buildCommands(module, v.Commands)
-			result = append(result, module)
-		default:
-			panic("Invalid command type")
+		bc := &builtinCommand{parent: parent, definition: cmd}
+		if len(cmd.Commands) > 0 {
+			bc.subcommands = buildCommands(bc, cmd.Commands)
 		}
+		result = append(result, bc)
 	}
 
 	return result

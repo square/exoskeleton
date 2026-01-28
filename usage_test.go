@@ -11,8 +11,8 @@ func TestUsageRelativeTo(t *testing.T) {
 	// └── a
 	//     └── b
 	//         └── c
-	a := &directoryModule{executableCommand: executableCommand{parent: entrypoint, name: "a"}}
-	b := &directoryModule{executableCommand: executableCommand{parent: a, name: "b"}}
+	a := &directoryCommand{executableCommand: executableCommand{parent: entrypoint, name: "a"}}
+	b := &directoryCommand{executableCommand: executableCommand{parent: a, name: "b"}}
 	c := &executableCommand{parent: b, name: "c"}
 	a.cmds = Commands{b}
 	b.cmds = Commands{c}

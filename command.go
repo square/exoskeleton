@@ -8,7 +8,7 @@ import (
 //
 // In the Go CLI, 'go test' and 'go mod tidy' are both commands. Exoskeleton would
 // model 'test' and 'tidy' as Commands. 'tidy' would be nested one level deeper
-// than 'test', beneath a Module named 'mod'.
+// than 'test', beneath a Command named 'mod'.
 type Command interface {
 	// Path returns the location of the executable that defines the command.
 	// For built-in commands, it returns the path to the entrypoint executable itself.
@@ -18,15 +18,15 @@ type Command interface {
 	// Name returns the name of the command.
 	Name() string
 
-	// Parent returns the module that contains the command.
+	// Parent returns the command that contains this command.
 	//
-	// For unnamespaced commands, Parent returns the Entrypoint. For the Entrypoint,
+	// For unnested commands, Parent returns the Entrypoint. For the Entrypoint,
 	// Parent returns nil.
 	//
 	// In the Go CLI, 'go test' and 'go mod tidy' are both commands. If modeled with
-	// Exoskeleton, 'tidy''s Parent would be the 'mod' Module and 'test''s Parent
+	// Exoskeleton, 'tidy''s Parent would be the 'mod' command and 'test''s Parent
 	// would be the entrypoint itself, 'go'.
-	Parent() Module
+	Parent() Command
 
 	// Exec executes the command.
 	Exec(e *Entrypoint, args, env []string) error
@@ -47,4 +47,11 @@ type Command interface {
 	// Returns a CommandError if the command does not fulfill the contract
 	// for providing its help.
 	Help() (string, error)
+
+	// Subcommands returns the list of Commands contained by this command.
+	// Returns an empty slice for leaf commands (commands without subcommands).
+	//
+	// Returns a CommandError if the command does not fulfill the contract
+	// for providing its subcommands.
+	Subcommands() (Commands, error)
 }

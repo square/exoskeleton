@@ -14,7 +14,7 @@ const executableModuleExtension = ".exoskeleton"
 type ExecutableContract struct {
 }
 
-func (c *ExecutableContract) BuildCommand(path string, info fs.DirEntry, parent Module, d DiscoveryContext) (Command, error) {
+func (c *ExecutableContract) BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error) {
 	// Only applies to files
 	if info.IsDir() {
 		return nil, ErrNotApplicable
@@ -48,15 +48,13 @@ func (c *ExecutableContract) BuildCommand(path string, info fs.DirEntry, parent 
 		}, nil
 	}
 
-	return &executableModule{
-		executableCommand: executableCommand{
-			parent:       parent,
-			path:         path,
-			name:         commandName,
-			discoveredIn: filepath.Dir(path),
-			executor:     d.Executor(),
-			cache:        d.Cache(),
-		},
-		discoverer: d.Next(),
+	return &executableCommand{
+		parent:       parent,
+		path:         path,
+		name:         commandName,
+		discoveredIn: filepath.Dir(path),
+		executor:     d.Executor(),
+		cache:        d.Cache(),
+		discoverer:   d.Next(),
 	}, nil
 }
