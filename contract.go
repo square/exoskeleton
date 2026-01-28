@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/square/exit"
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
 // Contract represents an agreement between Exoskeleton and a command about

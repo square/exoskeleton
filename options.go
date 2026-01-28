@@ -3,7 +3,7 @@ package exoskeleton
 import (
 	"text/template"
 
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
 // An Option applies optional changes to an Exoskeleton Entrypoint.

@@ -21,7 +21,7 @@
 //	   import (
 //	       "os"
 //
-//	       "github.com/square/exoskeleton"
+//	       "github.com/square/exoskeleton/v2"
 //	   )
 //
 //	   func main() {

@@ -3,7 +3,7 @@ package exoskeleton
 import (
 	"strings"
 
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
 // CompleteCommands is a CompleteFunc that provides completions for command names.

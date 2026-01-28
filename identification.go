@@ -6,8 +6,8 @@ import "strings"
 //
 // The function also returns any arguments that were not used to identify the command.
 // For example, if the Go CLI were implemented with Exoskeleton, and we ran it
-// with the rawArgs 'get -u github.com/square/exoskeleton', Identify would return
-// the Get command and the arguments {'-u', 'github.com/square/exoskeleton'}.
+// with the rawArgs 'get -u github.com/square/exoskeleton/v2', Identify would return
+// the Get command and the arguments {'-u', 'github.com/square/exoskeleton/v2'}.
 //
 // If no command is identified, Identify invokes CommandNotFound callbacks and
 // returns NullCommand.

@@ -3,7 +3,7 @@ package exoskeleton
 import (
 	"path/filepath"
 
-	"github.com/square/exoskeleton/pkg/shellcomp"
+	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
 type directoryCommand struct {
