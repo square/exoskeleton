@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## [unreleased]
 
+- **feat:** add command alias support (#52)&nbsp;&nbsp;·&nbsp;&nbsp;[847518b](https://github.com/square/exoskeleton/commit/847518b9b4436372ae935de94ca31212cb23db4e)
+
+## [2.0.0-beta.1](https://github.com/square/exoskeleton/compare/v1.9.0..v2.0.0-beta.1)&nbsp;&nbsp;·&nbsp;&nbsp;2026-01-28
+
 - **refactor** [**breaking**]**:** Collapse the `Module` interface into the `Command` interface (#50)&nbsp;&nbsp;·&nbsp;&nbsp;[f73217b](https://github.com/square/exoskeleton/commit/f73217b7d1fa9fea8526e24260731120bbfe04d8)
 - **chore:** Bump version to 2.0 (#51)&nbsp;&nbsp;·&nbsp;&nbsp;[d3259c7](https://github.com/square/exoskeleton/commit/d3259c7bbbabd9d3e55bc6a13152e92fb9719f67)
 
