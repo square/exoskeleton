@@ -54,6 +54,7 @@ type Entrypoint struct {
 func (e *Entrypoint) Parent() Command                { return nil }
 func (e *Entrypoint) Path() string                   { return e.path }
 func (e *Entrypoint) Name() string                   { return e.name }
+func (e *Entrypoint) Aliases() []string              { return nil }
 func (e *Entrypoint) Summary() (string, error)       { panic("Unused") }
 func (e *Entrypoint) Help() (string, error)          { panic("Unused") }
 func (e *Entrypoint) Subcommands() (Commands, error) { return e.cmds, nil }

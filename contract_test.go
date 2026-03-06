@@ -45,6 +45,50 @@ func TestGetMessageFromExecutionWithArgs(t *testing.T) {
 	assert.Equal(t, "a\nb\n--summary", output)
 }
 
+func TestParseDescribeCommandsWithAliases(t *testing.T) {
+	cmd := &executableCommand{path: "/test"}
+	out := `{
+		"name": "root",
+		"commands": [
+			{"name": "remove", "aliases": ["rm", "del"], "summary": "Remove something"},
+			{"name": "add", "summary": "Add something"}
+		]
+	}`
+
+	descriptor, err := parseDescribeCommands(cmd, out)
+	assert.NoError(t, err)
+	assert.Equal(t, "root", descriptor.Name)
+	assert.Len(t, descriptor.Commands, 2)
+	assert.Equal(t, []string{"rm", "del"}, descriptor.Commands[0].Aliases)
+	assert.Nil(t, descriptor.Commands[1].Aliases)
+}
+
+func TestToCommandsPropagatesAliases(t *testing.T) {
+	parent := &executableCommand{
+		path:     "/test",
+		executor: defaultExecutor,
+		cache:    nullCache{},
+	}
+
+	summary := "Remove something"
+	descriptors := []*commandDescriptor{
+		{Name: "remove", Aliases: []string{"rm"}, Summary: &summary},
+		{Name: "add"},
+	}
+
+	cmds := toCommands(parent, descriptors, nil, &discoverer{maxDepth: 0})
+
+	assert.Len(t, cmds, 2)
+
+	removeCmd := cmds[0].(*executableCommand)
+	assert.Equal(t, "remove", removeCmd.name)
+	assert.Equal(t, []string{"rm"}, removeCmd.aliases)
+
+	addCmd := cmds[1].(*executableCommand)
+	assert.Equal(t, "add", addCmd.name)
+	assert.Nil(t, addCmd.aliases)
+}
+
 // TestWithContractsOption verifies that WithContracts replaces the contracts.
 func TestWithContractsOption(t *testing.T) {
 	// Create a custom contract that only matches files named "custom"

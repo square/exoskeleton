@@ -14,6 +14,7 @@ type executableCommand struct {
 	parent       Command
 	path         string
 	name         string
+	aliases      []string
 	args         []string
 	summary      *string
 	discoveredIn string
@@ -26,6 +27,7 @@ type executableCommand struct {
 func (cmd *executableCommand) Parent() Command      { return cmd.parent }
 func (cmd *executableCommand) Path() string         { return cmd.path }
 func (cmd *executableCommand) Name() string         { return cmd.name }
+func (cmd *executableCommand) Aliases() []string    { return cmd.aliases }
 func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
 
 // Command returns an exec.Cmd that will run the executable with the given arguments.
@@ -161,6 +163,7 @@ func toCommands(parent *executableCommand, descriptors []*commandDescriptor, arg
 			path:         parent.path,
 			args:         append(args, descriptor.Name),
 			name:         descriptor.Name,
+			aliases:      descriptor.Aliases,
 			summary:      descriptor.Summary,
 			executor:     parent.executor,
 			cache:        parent.cache,

@@ -19,6 +19,46 @@ func TestFind(t *testing.T) {
 	assert.Equal(t, nil, cmds.Find("c"))
 }
 
+func TestFindByAlias(t *testing.T) {
+	remove := &executableCommand{name: "remove", aliases: []string{"rm", "del"}}
+	add := &executableCommand{name: "add"}
+	cmds := Commands{remove, add}
+
+	// Find by name still works
+	assert.Equal(t, remove, cmds.Find("remove"))
+	assert.Equal(t, add, cmds.Find("add"))
+
+	// Find by alias returns the canonical command
+	assert.Equal(t, remove, cmds.Find("rm"))
+	assert.Equal(t, remove, cmds.Find("del"))
+
+	// Unknown names still return nil
+	assert.Equal(t, nil, cmds.Find("unknown"))
+}
+
+func TestFindEarlierNameBeatsLaterAlias(t *testing.T) {
+	// When a command discovered earlier has the name and a later command
+	// has it as an alias, the earlier command wins by discovery order.
+	list := &executableCommand{name: "list"}
+	show := &executableCommand{name: "show", aliases: []string{"list"}}
+	cmds := Commands{list, show}
+
+	assert.Equal(t, list, cmds.Find("list"))
+	assert.Equal(t, show, cmds.Find("show"))
+}
+
+func TestFindDiscoveryOrderPrecedence(t *testing.T) {
+	// When a command discovered earlier has an alias that matches the name
+	// of a command discovered later, the earlier command wins — discovery
+	// order is the precedence rule.
+	show := &executableCommand{name: "show", aliases: []string{"list"}}
+	list := &executableCommand{name: "list"}
+	cmds := Commands{show, list}
+
+	assert.Equal(t, show, cmds.Find("list"))
+	assert.Equal(t, show, cmds.Find("show"))
+}
+
 func TestExpand(t *testing.T) {
 	a := &executableCommand{name: "a"}
 	b := &directoryCommand{executableCommand: executableCommand{name: "b"}}

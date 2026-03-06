@@ -35,6 +35,10 @@ type Command interface {
 	// It is used by the built-in command 'complete' which provides shell completions.
 	Complete(e *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error)
 
+	// Aliases returns alternative names for the command.
+	// Returns nil for commands without aliases.
+	Aliases() []string
+
 	// Summary returns the (short!) description of the command to be displayed
 	// in menus.
 	//

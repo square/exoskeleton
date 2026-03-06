@@ -7,6 +7,42 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestIdentifyByAlias(t *testing.T) {
+	remove := &executableCommand{name: "remove", aliases: []string{"rm"}}
+	b := &directoryCommand{executableCommand: executableCommand{name: "b"}}
+	sub := &executableCommand{parent: b, name: "sub", aliases: []string{"s"}}
+	b.cmds = Commands{sub}
+
+	help := &builtinCommand{definition: &EmbeddedCommand{Name: `help`}}
+	complete := &builtinCommand{definition: &EmbeddedCommand{Name: `complete`}}
+	entrypoint := &Entrypoint{cmds: Commands{help, complete, remove, b}}
+
+	scenarios := []struct {
+		args         []string
+		expectedCmd  Command
+		expectedArgs []string
+	}{
+		// Alias at top level
+		{[]string{"rm"}, remove, []string{}},
+		{[]string{"rm", "arg", "--flag"}, remove, []string{"arg", "--flag"}},
+
+		// Alias of a subcommand
+		{[]string{"b", "s"}, sub, []string{}},
+		{[]string{"b", "s", "arg"}, sub, []string{"arg"}},
+
+		// Canonical name still works
+		{[]string{"remove"}, remove, []string{}},
+		{[]string{"b", "sub"}, sub, []string{}},
+	}
+
+	for _, s := range scenarios {
+		cmd, rest, err := entrypoint.Identify(s.args)
+		assert.NoError(t, err, fmt.Sprintf("Identify(%v)", s.args))
+		assert.Equal(t, s.expectedCmd, cmd, fmt.Sprintf("Identify(%v)", s.args))
+		assert.Equal(t, s.expectedArgs, rest, fmt.Sprintf("Identify(%v)", s.args))
+	}
+}
+
 func TestIdentify(t *testing.T) {
 	// all
 	// ├── a
