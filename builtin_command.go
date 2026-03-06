@@ -13,6 +13,7 @@ type builtinCommand struct {
 func (c *builtinCommand) Parent() Command          { return c.parent }
 func (c *builtinCommand) Path() string             { return c.parent.Path() }
 func (c *builtinCommand) Name() string             { return c.definition.Name }
+func (c *builtinCommand) Aliases() []string        { return nil }
 func (c *builtinCommand) Summary() (string, error) { return c.definition.Summary, nil }
 func (c *builtinCommand) Help() (string, error)    { return c.definition.Help, nil }
 

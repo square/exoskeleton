@@ -69,13 +69,10 @@ func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, 
 				completions = append(completions, name)
 			}
 
-			// Also complete aliases
-			if ec, ok := subcmd.(*executableCommand); ok {
-				for _, alias := range ec.aliases {
-					if !seen[alias] && strings.HasPrefix(alias, toComplete) {
-						completions = append(completions, alias)
-						seen[alias] = true
-					}
+			for _, alias := range subcmd.Aliases() {
+				if !seen[alias] && strings.HasPrefix(alias, toComplete) {
+					completions = append(completions, alias)
+					seen[alias] = true
 				}
 			}
 		}

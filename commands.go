@@ -12,14 +12,9 @@ func (c Commands) Find(cmdName string) Command {
 		if cmd.Name() == cmdName {
 			return cmd
 		}
-	}
-	// Fall back to checking aliases
-	for _, cmd := range c {
-		if ec, ok := cmd.(*executableCommand); ok {
-			for _, alias := range ec.aliases {
-				if alias == cmdName {
-					return cmd
-				}
+		for _, alias := range cmd.Aliases() {
+			if alias == cmdName {
+				return cmd
 			}
 		}
 	}
