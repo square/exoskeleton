@@ -54,12 +54,11 @@ func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, 
 
 	if len(args) > 0 {
 		toComplete := args[0]
-		var name string
 
 		seen := make(map[string]bool)
 
 		for _, subcmd := range c {
-			name = subcmd.Name()
+			name := subcmd.Name()
 
 			if seen[name] {
 				continue
@@ -68,6 +67,16 @@ func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, 
 
 			if strings.HasPrefix(name, toComplete) {
 				completions = append(completions, name)
+			}
+
+			// Also complete aliases
+			if ec, ok := subcmd.(*executableCommand); ok {
+				for _, alias := range ec.aliases {
+					if !seen[alias] && strings.HasPrefix(alias, toComplete) {
+						completions = append(completions, alias)
+						seen[alias] = true
+					}
+				}
 			}
 		}
 	}

@@ -19,6 +19,46 @@ func TestFind(t *testing.T) {
 	assert.Equal(t, nil, cmds.Find("c"))
 }
 
+func TestFindByAlias(t *testing.T) {
+	remove := &executableCommand{name: "remove", aliases: []string{"rm", "del"}}
+	add := &executableCommand{name: "add"}
+	cmds := Commands{remove, add}
+
+	// Find by name still works
+	assert.Equal(t, remove, cmds.Find("remove"))
+	assert.Equal(t, add, cmds.Find("add"))
+
+	// Find by alias returns the canonical command
+	assert.Equal(t, remove, cmds.Find("rm"))
+	assert.Equal(t, remove, cmds.Find("del"))
+
+	// Unknown names still return nil
+	assert.Equal(t, nil, cmds.Find("unknown"))
+}
+
+func TestFindNameTakesPrecedenceOverAlias(t *testing.T) {
+	// If a command's name matches, it wins even if another command has it as an alias
+	list := &executableCommand{name: "list"}
+	show := &executableCommand{name: "show", aliases: []string{"list"}}
+	cmds := Commands{list, show}
+
+	// "list" matches the name of the first command, not the alias of the second
+	assert.Equal(t, list, cmds.Find("list"))
+	assert.Equal(t, show, cmds.Find("show"))
+}
+
+func TestFindNameBeatsAliasRegardlessOfOrder(t *testing.T) {
+	// The command with the alias comes FIRST — a single-pass implementation
+	// would incorrectly return show here. The two-pass approach ensures the
+	// canonical name always wins.
+	show := &executableCommand{name: "show", aliases: []string{"list"}}
+	list := &executableCommand{name: "list"}
+	cmds := Commands{show, list}
+
+	assert.Equal(t, list, cmds.Find("list"))
+	assert.Equal(t, show, cmds.Find("show"))
+}
+
 func TestExpand(t *testing.T) {
 	a := &executableCommand{name: "a"}
 	b := &directoryCommand{executableCommand: executableCommand{name: "b"}}

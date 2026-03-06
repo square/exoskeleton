@@ -6,11 +6,21 @@ import (
 
 type Commands []Command
 
-// Find returns the first command with a given name.
+// Find returns the first command with a given name or alias.
 func (c Commands) Find(cmdName string) Command {
 	for _, cmd := range c {
 		if cmd.Name() == cmdName {
 			return cmd
+		}
+	}
+	// Fall back to checking aliases
+	for _, cmd := range c {
+		if ec, ok := cmd.(*executableCommand); ok {
+			for _, alias := range ec.aliases {
+				if alias == cmdName {
+					return cmd
+				}
+			}
 		}
 	}
 	return nil

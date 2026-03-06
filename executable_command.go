@@ -14,6 +14,7 @@ type executableCommand struct {
 	parent       Command
 	path         string
 	name         string
+	aliases      []string
 	args         []string
 	summary      *string
 	discoveredIn string
@@ -161,6 +162,7 @@ func toCommands(parent *executableCommand, descriptors []*commandDescriptor, arg
 			path:         parent.path,
 			args:         append(args, descriptor.Name),
 			name:         descriptor.Name,
+			aliases:      descriptor.Aliases,
 			summary:      descriptor.Summary,
 			executor:     parent.executor,
 			cache:        parent.cache,
