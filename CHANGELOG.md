@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [unreleased]
+## [2.1.0](https://github.com/square/exoskeleton/compare/v2.0.0..v2.1.0)&nbsp;&nbsp;·&nbsp;&nbsp;2026-03-10
 
 - **feat:** Add `defaultCommand` to the CLI contract (#53)&nbsp;&nbsp;·&nbsp;&nbsp;[5224078](https://github.com/square/exoskeleton/commit/5224078c1cd09a84accbc56e54e0d0e9b8655ab9)
 
