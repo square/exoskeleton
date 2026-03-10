@@ -23,6 +23,7 @@ func (m *mockCommand) Parent() Command                            { return nil }
 func (m *mockCommand) Path() string                               { return m.path }
 func (m *mockCommand) Name() string                               { return filepath.Base(m.path) }
 func (m *mockCommand) Aliases() []string                          { return nil }
+func (m *mockCommand) DefaultSubcommand() Command                 { return nil }
 func (m *mockCommand) Subcommands() (Commands, error)             { return nil, nil }
 func (m *mockCommand) Summary() (string, error)                   { return "", nil }
 func (m *mockCommand) Help() (string, error)                      { return "", nil }

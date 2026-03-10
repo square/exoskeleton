@@ -159,10 +159,11 @@ func parseDescribeCommands(cmd *executableCommand, out string) (*commandDescript
 }
 
 type commandDescriptor struct {
-	Name     string               `json:"name"`
-	Aliases  []string             `json:"aliases,omitempty"`
-	Summary  *string              `json:"summary,omitempty"`
-	Commands []*commandDescriptor `json:"commands,omitempty"`
+	Name           string               `json:"name"`
+	Aliases        []string             `json:"aliases,omitempty"`
+	Summary        *string              `json:"summary,omitempty"`
+	Commands       []*commandDescriptor `json:"commands,omitempty"`
+	DefaultCommand string               `json:"defaultCommand,omitempty"`
 }
 
 func readSummaryFromShellScript(cmd *shellScriptCommand) (string, error) {

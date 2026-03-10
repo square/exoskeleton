@@ -27,6 +27,8 @@ func (_ nullCommand) Complete(_ *Entrypoint, _, _ []string) ([]string, shellcomp
 	return nil, shellcomp.DirectiveNoFileComp, nil
 }
 
+func (_ nullCommand) DefaultSubcommand() Command { return nil }
+
 func (_ nullCommand) Subcommands() (Commands, error) {
 	return Commands{}, nil
 }

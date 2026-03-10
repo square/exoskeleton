@@ -59,6 +59,39 @@ func TestFindDiscoveryOrderPrecedence(t *testing.T) {
 	assert.Equal(t, show, cmds.Find("show"))
 }
 
+func TestDefaultSubcommand(t *testing.T) {
+	a := &executableCommand{name: "a"}
+	b := &executableCommand{name: "b"}
+	parent := &executableCommand{
+		name:              "parent",
+		cmds:              Commands{a, b},
+		defaultSubcommand: "b",
+		discoverer:        &discoverer{maxDepth: 0},
+	}
+	assert.Equal(t, b, parent.DefaultSubcommand())
+}
+
+func TestDefaultSubcommandWhenUnset(t *testing.T) {
+	a := &executableCommand{name: "a"}
+	parent := &executableCommand{
+		name:       "parent",
+		cmds:       Commands{a},
+		discoverer: &discoverer{maxDepth: 0},
+	}
+	assert.Nil(t, parent.DefaultSubcommand())
+}
+
+func TestDefaultSubcommandWhenNameDoesNotMatch(t *testing.T) {
+	a := &executableCommand{name: "a"}
+	parent := &executableCommand{
+		name:              "parent",
+		cmds:              Commands{a},
+		defaultSubcommand: "z",
+		discoverer:        &discoverer{maxDepth: 0},
+	}
+	assert.Nil(t, parent.DefaultSubcommand())
+}
+
 func TestExpand(t *testing.T) {
 	a := &executableCommand{name: "a"}
 	b := &directoryCommand{executableCommand: executableCommand{name: "b"}}
