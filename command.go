@@ -58,4 +58,9 @@ type Command interface {
 	// Returns a CommandError if the command does not fulfill the contract
 	// for providing its subcommands.
 	Subcommands() (Commands, error)
+
+	// DefaultSubcommand returns the default subcommand for this command, if one
+	// is configured. Returns nil if no default is set or the named default does
+	// not match any subcommand.
+	DefaultSubcommand() Command
 }

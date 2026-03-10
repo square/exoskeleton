@@ -34,6 +34,16 @@ func (c *builtinCommand) Complete(e *Entrypoint, args, env []string) ([]string, 
 	return []string{}, shellcomp.DirectiveNoFileComp, nil
 }
 
+func (c *builtinCommand) DefaultSubcommand() Command {
+	if c.definition.DefaultCommand == "" {
+		return nil
+	}
+	if cmds, err := c.Subcommands(); err == nil {
+		return cmds.Find(c.definition.DefaultCommand)
+	}
+	return nil
+}
+
 func (c *builtinCommand) Subcommands() (Commands, error) {
 	return c.subcommands, nil
 }

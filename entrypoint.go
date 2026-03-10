@@ -57,6 +57,7 @@ func (e *Entrypoint) Name() string                   { return e.name }
 func (e *Entrypoint) Aliases() []string              { return nil }
 func (e *Entrypoint) Summary() (string, error)       { panic("Unused") }
 func (e *Entrypoint) Help() (string, error)          { panic("Unused") }
+func (e *Entrypoint) DefaultSubcommand() Command     { return nil }
 func (e *Entrypoint) Subcommands() (Commands, error) { return e.cmds, nil }
 
 // New searches the given paths and constructs an Entrypoint with a list of commands

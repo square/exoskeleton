@@ -23,12 +23,13 @@ type CompleteFunc func(e *Entrypoint, args, env []string) ([]string, shellcomp.D
 // EmbeddedCommand defines a built-in command that can be added to an Entrypoint
 // (as opposed to an executable external to the Entrypoint).
 type EmbeddedCommand struct {
-	Name     string
-	Summary  string
-	Help     string
-	Exec     ExecFunc
-	Complete CompleteFunc
-	Commands []*EmbeddedCommand
+	Name           string
+	Summary        string
+	Help           string
+	Exec           ExecFunc
+	Complete       CompleteFunc
+	Commands       []*EmbeddedCommand
+	DefaultCommand string
 }
 
 // Apply invokes the optionFunc with the given Entrypoint.

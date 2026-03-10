@@ -58,12 +58,18 @@ func TestIdentify(t *testing.T) {
 	b.cmds = Commands{c, d}
 	d.cmds = Commands{e}
 
+	// f is a module with a default subcommand
+	f := &builtinCommand{definition: &EmbeddedCommand{Name: "f", DefaultCommand: "g"}}
+	g := &builtinCommand{parent: f, definition: &EmbeddedCommand{Name: "g"}}
+	h := &builtinCommand{parent: f, definition: &EmbeddedCommand{Name: "h"}}
+	f.subcommands = Commands{g, h}
+
 	// Should never be returned because `a` precedes it.
 	overloaded_a := &executableCommand{name: "a"}
 
 	help := &builtinCommand{definition: &EmbeddedCommand{Name: `help`}}
 	complete := &builtinCommand{definition: &EmbeddedCommand{Name: `complete`}}
-	entrypoint := &Entrypoint{cmds: Commands{help, complete, a, b, overloaded_a}}
+	entrypoint := &Entrypoint{cmds: Commands{help, complete, a, b, f, overloaded_a}}
 
 	scenarios := []struct {
 		args         []string
@@ -99,6 +105,14 @@ func TestIdentify(t *testing.T) {
 
 		// Can invoke a module with a trailing colon
 		{[]string{"b:"}, b, []string{}},
+
+		// DefaultSubcommand is used when a subcommand is not found by name
+		{[]string{"f"}, f, []string{}},
+		{[]string{"f", "--flag"}, f, []string{"--flag"}},
+		{[]string{"f", "g"}, g, []string{}},
+		{[]string{"f", "h"}, h, []string{}},
+		{[]string{"f", "x"}, g, []string{"x"}},
+		{[]string{"f", "x", "arg", "--flag"}, g, []string{"x", "arg", "--flag"}},
 
 		// Identifies `--complete` as `complete`
 		{[]string{"--complete"}, complete, []string{}},

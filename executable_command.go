@@ -11,17 +11,18 @@ import (
 
 // executableCommand implements the Command interface for a file that can be executed.
 type executableCommand struct {
-	parent       Command
-	path         string
-	name         string
-	aliases      []string
-	args         []string
-	summary      *string
-	discoveredIn string
-	executor     ExecutorFunc
-	cmds         Commands
-	discoverer   DiscoveryContext
-	cache        Cache
+	parent            Command
+	path              string
+	name              string
+	aliases           []string
+	args              []string
+	summary           *string
+	discoveredIn      string
+	executor          ExecutorFunc
+	cmds              Commands
+	defaultSubcommand string
+	discoverer        DiscoveryContext
+	cache             Cache
 }
 
 func (cmd *executableCommand) Parent() Command      { return cmd.parent }
@@ -95,6 +96,16 @@ func (cmd *executableCommand) Help() (string, error) {
 	return readHelpFromExecutable(cmd)
 }
 
+func (cmd *executableCommand) DefaultSubcommand() Command {
+	if cmd.defaultSubcommand == "" {
+		return nil
+	}
+	if cmds, err := cmd.Subcommands(); err == nil {
+		return cmds.Find(cmd.defaultSubcommand)
+	}
+	return nil
+}
+
 // Subcommands returns the list of subcommands for this command.
 // Returns an empty slice for leaf commands.
 func (cmd *executableCommand) Subcommands() (Commands, error) {
@@ -150,6 +161,7 @@ func (cmd *executableCommand) discover() error {
 	}
 
 	cmd.summary = descriptor.Summary
+	cmd.defaultSubcommand = descriptor.DefaultCommand
 	cmd.cmds = toCommands(cmd, descriptor.Commands, nil, cmd.discoverer)
 	return nil
 }
@@ -158,15 +170,16 @@ func toCommands(parent *executableCommand, descriptors []*commandDescriptor, arg
 	cmds := Commands{}
 	for _, descriptor := range descriptors {
 		c := &executableCommand{
-			parent:       parent,
-			discoveredIn: parent.discoveredIn,
-			path:         parent.path,
-			args:         append(args, descriptor.Name),
-			name:         descriptor.Name,
-			aliases:      descriptor.Aliases,
-			summary:      descriptor.Summary,
-			executor:     parent.executor,
-			cache:        parent.cache,
+			parent:            parent,
+			discoveredIn:      parent.discoveredIn,
+			path:              parent.path,
+			args:              append(args, descriptor.Name),
+			name:              descriptor.Name,
+			aliases:           descriptor.Aliases,
+			summary:           descriptor.Summary,
+			defaultSubcommand: descriptor.DefaultCommand,
+			executor:          parent.executor,
+			cache:             parent.cache,
 		}
 
 		if len(descriptor.Commands) > 0 && d.MaxDepth() != 0 {

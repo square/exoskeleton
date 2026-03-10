@@ -57,6 +57,9 @@ func identify(cmd Command, args []string) (Command, []string, error) {
 	if cmds, err := cmd.Subcommands(); err != nil {
 		return cmd, args, err
 	} else if found := cmds.Find(name); found == nil {
+		if def := cmd.DefaultSubcommand(); def != nil {
+			return def, args, nil
+		}
 		return nullCommand{parent: cmd, name: name}, rest, nil
 	} else if subcmds, err := found.Subcommands(); err != nil {
 		return found, rest, err

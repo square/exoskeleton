@@ -89,6 +89,29 @@ func TestToCommandsPropagatesAliases(t *testing.T) {
 	assert.Nil(t, addCmd.aliases)
 }
 
+func TestDefaultCommandFromDescriptor(t *testing.T) {
+	parent := &executableCommand{path: "/test", executor: defaultExecutor, cache: nullCache{}}
+	out := `{
+		"name": "root",
+		"defaultCommand": "b",
+		"commands": [
+			{"name": "a"},
+			{"name": "b"}
+		]
+	}`
+
+	descriptor, err := parseDescribeCommands(parent, out)
+	assert.NoError(t, err)
+	assert.Equal(t, "b", descriptor.DefaultCommand)
+
+	cmds := toCommands(parent, descriptor.Commands, nil, &discoverer{maxDepth: 0})
+	parent.cmds = cmds
+	parent.defaultSubcommand = descriptor.DefaultCommand
+	parent.discoverer = &discoverer{maxDepth: 0}
+
+	assert.Equal(t, "b", parent.DefaultSubcommand().Name())
+}
+
 // TestWithContractsOption verifies that WithContracts replaces the contracts.
 func TestWithContractsOption(t *testing.T) {
 	// Create a custom contract that only matches files named "custom"

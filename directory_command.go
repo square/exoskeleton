@@ -30,6 +30,8 @@ func (m *directoryCommand) Help() (string, error) {
 	panic("Unused")
 }
 
+func (m *directoryCommand) DefaultSubcommand() Command { return nil }
+
 func (m *directoryCommand) Subcommands() (Commands, error) {
 	if m.cmds == nil && m.discoverer != nil {
 		m.cmds, _ = m.discoverer.DiscoverIn(filepath.Dir(m.path), m)
