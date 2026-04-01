@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# SUMMARY: An OpenCLI tool
+
+if [[ "$1" == "--help-opencli" ]]; then
+  cat << EOF
+{
+  "opencli": "0.1-block.1",
+  "name": "opencli-tool",
+  "info": {"version": "1.0.0"},
+  "summary": "An OpenCLI tool",
+  "commands": [
+    {
+      "name": "build",
+      "summary": "compile packages and dependencies"
+    },
+    {
+      "name": "mod",
+      "summary": "module maintenance",
+      "defaultCommand": "tidy",
+      "commands": [
+        {
+          "name": "init",
+          "summary": "initialize new module in current directory"
+        },
+        {
+          "name": "tidy",
+          "summary": "add missing and remove unused modules",
+          "aliases": ["t"]
+        }
+      ]
+    },
+    {
+      "name": "hidden-cmd",
+      "summary": "this is hidden",
+      "hidden": true,
+      "options": [
+        {"name": "--verbose", "aliases": ["-v"]}
+      ],
+      "arguments": [
+        {"name": "file"}
+      ]
+    }
+  ]
+}
+EOF
+  exit 0
+fi
+
+echo "For testing --help-opencli"
+exit 80

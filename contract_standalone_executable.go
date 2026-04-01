@@ -24,12 +24,23 @@ func (c *StandaloneExecutableContract) BuildCommand(path string, info fs.DirEntr
 		return nil, ErrNotApplicable
 	}
 
-	return &executableCommand{
+	cmd := &executableCommand{
 		parent:       parent,
 		path:         path,
 		name:         filepath.Base(path),
 		discoveredIn: filepath.Dir(path),
 		executor:     d.Executor(),
 		cache:        d.Cache(),
-	}, nil
+	}
+
+	// Only applies to executables that define a summary
+	summary, err := d.Cache().Fetch(cmd, "summary", func() (string, error) {
+		return readSummaryFromExecutable(cmd)
+	})
+	if err != nil || summary == "" {
+		return nil, ErrNotApplicable
+	}
+	cmd.summary = &summary
+
+	return cmd, nil
 }

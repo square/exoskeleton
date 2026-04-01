@@ -9,6 +9,10 @@ import (
 	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
+// describeFunc fetches and parses the command descriptor for an executable module.
+// It is called by discover() to obtain the command tree.
+type describeFunc func(cmd *executableCommand) (*commandDescriptor, error)
+
 // executableCommand implements the Command interface for a file that can be executed.
 type executableCommand struct {
 	parent            Command
@@ -23,6 +27,7 @@ type executableCommand struct {
 	defaultSubcommand string
 	discoverer        DiscoveryContext
 	cache             Cache
+	describe          describeFunc
 }
 
 func (cmd *executableCommand) Parent() Command      { return cmd.parent }
@@ -37,9 +42,11 @@ func (cmd *executableCommand) Command(args ...string) *exec.Cmd {
 }
 
 // Exec invokes the executable with the given arguments and environment.
-// If this is a module (has discoverer), it prints the module help instead.
+// If this command has subcommands, it prints the module help instead.
 func (cmd *executableCommand) Exec(e *Entrypoint, args, env []string) error {
-	if cmd.discoverer != nil {
+	if cmds, err := cmd.Subcommands(); err != nil {
+		return err
+	} else if len(cmds) > 0 {
 		return e.printModuleHelp(cmd, args)
 	}
 	command := cmd.Command(args...)
@@ -53,7 +60,9 @@ func (cmd *executableCommand) Exec(e *Entrypoint, args, env []string) error {
 // Complete invokes the executable with `--complete` as its first argument
 // and parses its output according to Cobra's ShellComp API.
 func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]string, shellcomp.Directive, error) {
-	if cmd.discoverer != nil {
+	if cmds, err := cmd.Subcommands(); err != nil {
+		return nil, shellcomp.DirectiveError, err
+	} else if len(cmds) > 0 {
 		return completionsForSubcommands(cmd, args)
 	}
 	return getCompletionsFromExecutable(cmd, args, env)
@@ -143,19 +152,18 @@ func (cmd *executableCommand) output(c *exec.Cmd) ([]byte, error) {
 	return stdout.Bytes(), err
 }
 
-// discover invokes an executable with `--describe-commands` and constructs a tree
-// of modules and subcommands (all to be invoked through the given executable)
-// from the JSON output.
+// discover obtains a command descriptor and constructs a tree of modules and
+// subcommands (all to be invoked through the given executable) from it.
+//
+// When the describe field is set, it is used to obtain the descriptor.
+// Otherwise, the executable is invoked with --describe-commands.
 func (cmd *executableCommand) discover() error {
-	out, err := cmd.cache.Fetch(cmd, "describe-commands", func() (string, error) {
-		return describeCommandsRaw(cmd)
-	})
-
-	if err != nil {
-		return err
+	describe := cmd.describe
+	if describe == nil {
+		describe = describeCommandsDefault
 	}
 
-	descriptor, err := parseDescribeCommands(cmd, out)
+	descriptor, err := describe(cmd)
 	if err != nil {
 		return err
 	}

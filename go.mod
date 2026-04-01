@@ -3,6 +3,7 @@ module github.com/square/exoskeleton/v2
 go 1.24.0
 
 require (
+	github.com/block/opencli-go v0.0.0-20260326022943-55adcb6353a0
 	github.com/spf13/cobra v1.7.0
 	github.com/square/exit v1.1.0
 	github.com/stretchr/testify v1.8.1

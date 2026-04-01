@@ -158,6 +158,18 @@ func parseDescribeCommands(cmd *executableCommand, out string) (*commandDescript
 	return descriptor, nil
 }
 
+// describeCommandsDefault is the default describeFunc used by ExecutableContract.
+// It invokes --describe-commands and parses the JSON output.
+func describeCommandsDefault(cmd *executableCommand) (*commandDescriptor, error) {
+	out, err := cmd.cache.Fetch(cmd, "describe-commands", func() (string, error) {
+		return describeCommandsRaw(cmd)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return parseDescribeCommands(cmd, out)
+}
+
 type commandDescriptor struct {
 	Name           string               `json:"name"`
 	Aliases        []string             `json:"aliases,omitempty"`
