@@ -1,3 +1,5 @@
+github.com/block/opencli-go v0.0.0-20260326022943-55adcb6353a0 h1:05xW6++uElFIHASB9YNb4BYaO++f0Y47r55f4lXRHBY=
+github.com/block/opencli-go v0.0.0-20260326022943-55adcb6353a0/go.mod h1:pvx6Ji9kPPrdePzM2H8hUJMqKhIk2MsV133Cj9sr2Jk=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

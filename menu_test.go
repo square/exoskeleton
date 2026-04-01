@@ -45,47 +45,51 @@ func TestMenuForSections(t *testing.T) {
 		{
 			0,
 			`COMMANDS
-   echoargs  Echoes the args it received
-   env       Prints environment variables
-   exit      Exits with the given code
-   go:       Provides several commands
-   hello     Prints "hello"
-   suggest   Suggests arguments`,
+   echoargs      Echoes the args it received
+   env           Prints environment variables
+   exit          Exits with the given code
+   go:           Provides several commands
+   hello         Prints "hello"
+   opencli-tool  An OpenCLI tool
+   suggest       Suggests arguments`,
 		},
 		{
 			1,
 			`COMMANDS
-   echoargs  Echoes the args it received
-   env       Prints environment variables
-   exit      Exits with the given code
-   go build  compile packages and dependencies
-   go mod:   module maintenance
-   hello     Prints "hello"
-   suggest   Suggests arguments`,
+   echoargs      Echoes the args it received
+   env           Prints environment variables
+   exit          Exits with the given code
+   go build      compile packages and dependencies
+   go mod:       module maintenance
+   hello         Prints "hello"
+   opencli-tool  An OpenCLI tool
+   suggest       Suggests arguments`,
 		},
 		{
 			2,
 			`COMMANDS
-   echoargs     Echoes the args it received
-   env          Prints environment variables
-   exit         Exits with the given code
-   go build     compile packages and dependencies
-   go mod init  initialize new module in current directory
-   go mod tidy  add missing and remove unused modules
-   hello        Prints "hello"
-   suggest      Suggests arguments`,
+   echoargs      Echoes the args it received
+   env           Prints environment variables
+   exit          Exits with the given code
+   go build      compile packages and dependencies
+   go mod init   initialize new module in current directory
+   go mod tidy   add missing and remove unused modules
+   hello         Prints "hello"
+   opencli-tool  An OpenCLI tool
+   suggest       Suggests arguments`,
 		},
 		{
 			-1,
 			`COMMANDS
-   echoargs     Echoes the args it received
-   env          Prints environment variables
-   exit         Exits with the given code
-   go build     compile packages and dependencies
-   go mod init  initialize new module in current directory
-   go mod tidy  add missing and remove unused modules
-   hello        Prints "hello"
-   suggest      Suggests arguments`,
+   echoargs      Echoes the args it received
+   env           Prints environment variables
+   exit          Exits with the given code
+   go build      compile packages and dependencies
+   go mod init   initialize new module in current directory
+   go mod tidy   add missing and remove unused modules
+   hello         Prints "hello"
+   opencli-tool  An OpenCLI tool
+   suggest       Suggests arguments`,
 		},
 	}
 
