@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [unreleased]
+## [2.2.0](https://github.com/square/exoskeleton/compare/v2.1.0..v2.2.0)&nbsp;&nbsp;·&nbsp;&nbsp;2026-04-01
 
 - **feat:** Add a new contract type that parses `--help-opencli` (#55)&nbsp;&nbsp;·&nbsp;&nbsp;[a2b9976](https://github.com/square/exoskeleton/commit/a2b99765908508613114efb3ea1256b060e7debd)
 - **chore:** Configure `just {test,lint}` and automatic formatting (#54)&nbsp;&nbsp;·&nbsp;&nbsp;[efe4b77](https://github.com/square/exoskeleton/commit/efe4b77c3e64cc5eddfa4f873fdcdd570328a56d)
