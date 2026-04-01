@@ -161,6 +161,9 @@ if children, _ := cmd.Subcommands(); len(children) > 0 {
 ```
 
 
+A change
+
+
 [cobra]: https://github.com/spf13/cobra
 [exit]: https://github.com/square/exit#the-codes
 [GenerateCompletionScript]: https://pkg.go.dev/github.com/square/exoskeleton#GenerateCompletionScript
