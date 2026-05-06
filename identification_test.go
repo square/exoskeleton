@@ -108,7 +108,7 @@ func TestIdentify(t *testing.T) {
 
 		// DefaultSubcommand is used when a subcommand is not found by name
 		{[]string{"f"}, f, []string{}},
-		{[]string{"f", "--flag"}, f, []string{"--flag"}},
+		{[]string{"f", "--flag"}, g, []string{"--flag"}},
 		{[]string{"f", "g"}, g, []string{}},
 		{[]string{"f", "h"}, h, []string{}},
 		{[]string{"f", "x"}, g, []string{"x"}},
