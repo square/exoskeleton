@@ -44,6 +44,11 @@ func (e *Entrypoint) Identify(args []string) (Command, []string, error) {
 // for providing its subcommands.
 func identify(cmd Command, args []string) (Command, []string, error) {
 	if len(args) == 0 || isFlag(args[0]) {
+		if len(args) > 0 {
+			if def := cmd.DefaultSubcommand(); def != nil {
+				return def, args, nil
+			}
+		}
 		return cmd, args, nil
 	}
 
