@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [unreleased]
+## [2.3.0](https://github.com/square/exoskeleton/compare/v2.2.0..v2.3.0)&nbsp;&nbsp;·&nbsp;&nbsp;2026-05-06
 
 - **fix:** Identify default subcommands when the first argument is a flag (#56)&nbsp;&nbsp;·&nbsp;&nbsp;[b9736cb](https://github.com/square/exoskeleton/commit/b9736cb8fb37df9de20c21f777ff4a846b447087)
 
