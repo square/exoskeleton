@@ -112,6 +112,37 @@ func TestDefaultCommandFromDescriptor(t *testing.T) {
 	assert.Equal(t, "b", parent.DefaultSubcommand().Name())
 }
 
+// TestContractReporter verifies that a Command built by a Contract reports the
+// name of that Contract via the ContractReporter interface.
+func TestContractReporter(t *testing.T) {
+	d := &discoverer{maxDepth: -1, executor: defaultExecutor, cache: nullCache{}}
+
+	scenarios := []struct {
+		contract   Contract
+		executable string
+		expected   string
+	}{
+		{&OpenCLIContract{}, "opencli-tool", "OpenCLI"},
+		{&ShellScriptContract{}, "echoargs", "ShellScript"},
+		{&ExecutableContract{}, "go.exoskeleton", "Executable"},
+		{&StandaloneExecutableContract{}, "hello", "StandaloneExecutable"},
+		{&DirectoryContract{MetadataFilename: ".exoskeleton"}, "nested-1", "Directory"},
+	}
+
+	for _, s := range scenarios {
+		path := filepath.Join(fixtures, s.executable)
+		info, err := os.Lstat(path)
+		assert.NoErrorf(t, err, "Given executable=%s", s.executable)
+
+		cmd, err := s.contract.BuildCommand(path, fs.FileInfoToDirEntry(info), nil, d)
+		assert.NoErrorf(t, err, "Given executable=%s", s.executable)
+
+		reporter, ok := cmd.(ContractReporter)
+		assert.Truef(t, ok, "%s should implement ContractReporter", s.executable)
+		assert.Equalf(t, s.expected, reporter.Contract(), "Given executable=%s", s.executable)
+	}
+}
+
 // TestWithContractsOption verifies that WithContracts replaces the contracts.
 func TestWithContractsOption(t *testing.T) {
 	// Create a custom contract that only matches files named "custom"

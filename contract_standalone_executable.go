@@ -31,6 +31,7 @@ func (c *StandaloneExecutableContract) BuildCommand(path string, info fs.DirEntr
 		discoveredIn: filepath.Dir(path),
 		executor:     d.Executor(),
 		cache:        d.Cache(),
+		contract:     "StandaloneExecutable",
 	}
 
 	// Only applies to executables that define a summary

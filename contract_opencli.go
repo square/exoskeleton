@@ -39,6 +39,7 @@ func (c *OpenCLIContract) BuildCommand(path string, info fs.DirEntry, parent Com
 			discoveredIn: filepath.Dir(path),
 			executor:     d.Executor(),
 			cache:        d.Cache(),
+			contract:     "OpenCLI",
 		}, nil
 	}
 
@@ -51,6 +52,7 @@ func (c *OpenCLIContract) BuildCommand(path string, info fs.DirEntry, parent Com
 		cache:        d.Cache(),
 		discoverer:   d.Next(),
 		describe:     describeOpenCLI,
+		contract:     "OpenCLI",
 	}, nil
 }
 
