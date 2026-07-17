@@ -18,6 +18,25 @@ import (
 // file extension. Any executable file is eligible.
 type OpenCLIContract struct{}
 
+// OpenCLIDescriber is implemented by Commands that can describe themselves
+// using the OpenCLI model (github.com/block/opencli-go). Not every Command
+// implements it; reflect on a discovered Command to obtain its metadata:
+//
+//	if d, ok := cmd.(OpenCLIDescriber); ok {
+//		if c, _ := d.OpenCLICommand(); c != nil {
+//			// c.Arguments, c.Options, c.Description, c.Examples, ...
+//		}
+//	}
+//
+// OpenCLICommand returns nil when the command has no OpenCLI metadata (for
+// example, a command discovered via a contract other than OpenCLI).
+//
+// The returned Command describes only this node; its Commands field is not
+// populated. Walk Subcommands() to describe the command tree.
+type OpenCLIDescriber interface {
+	OpenCLICommand() (*opencli.Command, error)
+}
+
 func (c *OpenCLIContract) BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error) {
 	if info.IsDir() {
 		return nil, ErrNotApplicable
@@ -118,6 +137,14 @@ func opencliToDescriptor(cmd opencli.Command) *commandDescriptor {
 	if cmd.DefaultCommand != nil {
 		d.DefaultCommand = *cmd.DefaultCommand
 	}
+
+	// Retain the node's OpenCLI metadata so it can be surfaced via
+	// OpenCLIDescriber. Strip Commands: children are represented by
+	// d.Commands and reachable through Subcommands().
+	nodeLocal := cmd
+	nodeLocal.Commands = nil
+	d.openCLI = &nodeLocal
+
 	if len(cmd.Commands) > 0 {
 		d.Commands = make([]*commandDescriptor, len(cmd.Commands))
 		for i, sub := range cmd.Commands {
