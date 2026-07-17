@@ -26,6 +26,17 @@ type Contract interface {
 	BuildCommand(path string, info fs.DirEntry, parent Command, d DiscoveryContext) (Command, error)
 }
 
+// ContractReporter is implemented by Commands that know which Contract
+// discovered them. Reflect on a discovered Command to learn its contract:
+//
+//	if r, ok := cmd.(ContractReporter); ok {
+//		fmt.Println(r.Contract()) // e.g. "OpenCLI"
+//	}
+type ContractReporter interface {
+	// Contract returns the name of the Contract that built the Command.
+	Contract() string
+}
+
 // ErrNotApplicable indicates that a contract does not apply to a given file/directory.
 // Discovery will try the next contract in the list.
 var ErrNotApplicable = errors.New("contract does not apply")

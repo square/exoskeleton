@@ -48,6 +48,7 @@ func (c *ShellScriptContract) BuildCommand(path string, info fs.DirEntry, parent
 			discoveredIn: filepath.Dir(path),
 			executor:     d.Executor(),
 			cache:        d.Cache(),
+			contract:     "ShellScript",
 		},
 	}, nil
 }

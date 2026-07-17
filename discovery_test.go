@@ -132,6 +132,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 					path:         filepath.Join(fixtures, "echoargs"),
 					discoveredIn: fixtures,
 					cache:        nullCache{},
+					contract:     "ShellScript",
 				},
 			},
 		},
@@ -144,6 +145,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 					path:         filepath.Join(fixtures, "nested-1", ".exoskeleton"),
 					discoveredIn: fixtures,
 					cache:        nullCache{},
+					contract:     "Directory",
 				},
 				discoverer: d.Next(),
 			},
@@ -157,6 +159,7 @@ func TestDiscovererBuildsCommand(t *testing.T) {
 				discoveredIn: fixtures,
 				cache:        nullCache{},
 				discoverer:   d.Next(),
+				contract:     "Executable",
 			},
 		},
 	}

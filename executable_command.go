@@ -28,6 +28,7 @@ type executableCommand struct {
 	discoverer        DiscoveryContext
 	cache             Cache
 	describe          describeFunc
+	contract          string
 }
 
 func (cmd *executableCommand) Parent() Command      { return cmd.parent }
@@ -35,6 +36,7 @@ func (cmd *executableCommand) Path() string         { return cmd.path }
 func (cmd *executableCommand) Name() string         { return cmd.name }
 func (cmd *executableCommand) Aliases() []string    { return cmd.aliases }
 func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
+func (cmd *executableCommand) Contract() string     { return cmd.contract }
 
 // Command returns an exec.Cmd that will run the executable with the given arguments.
 func (cmd *executableCommand) Command(args ...string) *exec.Cmd {
@@ -188,6 +190,7 @@ func toCommands(parent *executableCommand, descriptors []*commandDescriptor, arg
 			defaultSubcommand: descriptor.DefaultCommand,
 			executor:          parent.executor,
 			cache:             parent.cache,
+			contract:          parent.contract,
 		}
 
 		if len(descriptor.Commands) > 0 && d.MaxDepth() != 0 {
