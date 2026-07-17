@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [unreleased]
+
+- **feat:** Add `OpenCLIDescriber` interface to expose a command's OpenCLI metadata (#58)&nbsp;&nbsp;·&nbsp;&nbsp;[f659546](https://github.com/square/exoskeleton/commit/f6595468aaf7f04f24706b3eed10ea7d156ccb72)
+
 ## [2.4.0](https://github.com/square/exoskeleton/compare/v2.3.0..v2.4.0)&nbsp;&nbsp;·&nbsp;&nbsp;2026-07-17
 
 - **feat:** Add `ContractReporter` interface to reveal the contract a command implements (#57)&nbsp;&nbsp;·&nbsp;&nbsp;[732f2b1](https://github.com/square/exoskeleton/commit/732f2b16c63f313737abf4e18366eb00f7ac219e)
