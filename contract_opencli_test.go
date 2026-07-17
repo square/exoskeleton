@@ -108,6 +108,54 @@ func TestOpenCLICommandDiscovery(t *testing.T) {
 	assert.Equal(t, "tidy", cmds[1].DefaultSubcommand().Name())
 }
 
+func TestOpenCLICommandExposesMetadata(t *testing.T) {
+	contract := &OpenCLIContract{}
+	path := filepath.Join(fixtures, "opencli-tool")
+	info, err := os.Lstat(path)
+	assert.NoError(t, err)
+
+	d := &discoverer{maxDepth: -1, executor: defaultExecutor}
+	cmd, err := contract.BuildCommand(path, fs.FileInfoToDirEntry(info), nil, d)
+	assert.NoError(t, err)
+
+	// The root command is an OpenCLIDescriber.
+	describer, ok := cmd.(OpenCLIDescriber)
+	assert.True(t, ok)
+
+	// Root node metadata (triggers discovery). Commands are not populated on
+	// the node; they are reachable via Subcommands().
+	root, err := describer.OpenCLICommand()
+	assert.NoError(t, err)
+	assert.Equal(t, "opencli-tool", root.Name)
+	assert.Equal(t, "An OpenCLI tool", *root.Summary)
+	assert.Empty(t, root.Commands)
+
+	cmds, err := cmd.Subcommands()
+	assert.NoError(t, err)
+
+	// The "hidden-cmd" subcommand carries options, arguments, and the hidden flag.
+	hidden, ok := cmds[2].(OpenCLIDescriber)
+	assert.True(t, ok)
+	node, err := hidden.OpenCLICommand()
+	assert.NoError(t, err)
+	assert.True(t, node.Hidden)
+	assert.Len(t, node.Options, 1)
+	assert.Equal(t, "--verbose", node.Options[0].Name)
+	assert.Equal(t, []string{"-v"}, node.Options[0].Aliases)
+	assert.Len(t, node.Arguments, 1)
+	assert.Equal(t, "file", node.Arguments[0].Name)
+	assert.Empty(t, node.Commands)
+}
+
+func TestOpenCLICommandForNonOpenCLIContract(t *testing.T) {
+	// A command that was not discovered via the OpenCLI contract has no
+	// OpenCLI metadata; its richer fields come from the Command interface.
+	cmd := &executableCommand{name: "plain", aliases: []string{"p"}}
+	node, err := cmd.OpenCLICommand()
+	assert.NoError(t, err)
+	assert.Nil(t, node)
+}
+
 func TestParseOpenCLI(t *testing.T) {
 	cmd := &executableCommand{path: "/test"}
 	out := `{

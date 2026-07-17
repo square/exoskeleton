@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/block/opencli-go"
 	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
@@ -29,6 +30,7 @@ type executableCommand struct {
 	cache             Cache
 	describe          describeFunc
 	contract          string
+	openCLI           *opencli.Command
 }
 
 func (cmd *executableCommand) Parent() Command      { return cmd.parent }
@@ -172,8 +174,28 @@ func (cmd *executableCommand) discover() error {
 
 	cmd.summary = descriptor.Summary
 	cmd.defaultSubcommand = descriptor.DefaultCommand
+	cmd.openCLI = descriptor.openCLI
 	cmd.cmds = toCommands(cmd, descriptor.Commands, nil, cmd.discoverer)
 	return nil
+}
+
+// OpenCLICommand returns this command's OpenCLI metadata (github.com/block/opencli-go),
+// or nil when it has none — for example, a command discovered via a contract
+// other than OpenCLI.
+//
+// The returned Command describes only this node. Its Commands field is not
+// populated; walk Subcommands() to describe the command tree.
+func (cmd *executableCommand) OpenCLICommand() (*opencli.Command, error) {
+	if cmd.openCLI == nil && cmd.discoverer != nil && cmd.cmds == nil {
+		if err := cmd.discover(); err != nil {
+			return nil, err
+		}
+	}
+	if cmd.openCLI == nil {
+		return nil, nil
+	}
+	node := *cmd.openCLI
+	return &node, nil
 }
 
 func toCommands(parent *executableCommand, descriptors []*commandDescriptor, args []string, d DiscoveryContext) Commands {
@@ -188,6 +210,7 @@ func toCommands(parent *executableCommand, descriptors []*commandDescriptor, arg
 			aliases:           descriptor.Aliases,
 			summary:           descriptor.Summary,
 			defaultSubcommand: descriptor.DefaultCommand,
+			openCLI:           descriptor.openCLI,
 			executor:          parent.executor,
 			cache:             parent.cache,
 			contract:          parent.contract,

@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/block/opencli-go"
 	"github.com/square/exit"
 	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
@@ -187,6 +188,12 @@ type commandDescriptor struct {
 	Summary        *string              `json:"summary,omitempty"`
 	Commands       []*commandDescriptor `json:"commands,omitempty"`
 	DefaultCommand string               `json:"defaultCommand,omitempty"`
+
+	// openCLI holds the node's OpenCLI metadata (arguments, options, description,
+	// examples, exit codes, ...) captured from --help-opencli. Its Commands field
+	// is not populated; children are represented by Commands above. It is nil for
+	// commands discovered via contracts other than OpenCLI.
+	openCLI *opencli.Command
 }
 
 func readSummaryFromShellScript(cmd *shellScriptCommand) (string, error) {
