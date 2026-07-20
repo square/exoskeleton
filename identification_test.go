@@ -1,6 +1,7 @@
 package exoskeleton
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -41,6 +42,42 @@ func TestIdentifyByAlias(t *testing.T) {
 		assert.Equal(t, s.expectedCmd, cmd, fmt.Sprintf("Identify(%v)", s.args))
 		assert.Equal(t, s.expectedArgs, rest, fmt.Sprintf("Identify(%v)", s.args))
 	}
+}
+
+// A command discovered via a describe-based contract (e.g. OpenCLI) resolves
+// its subcommands lazily by shelling out. When the target doesn't implement the
+// describe flag, that resolution fails. Identifying such a command with no
+// remaining args must not trigger the resolution — locating the command should
+// not require running its describe flag.
+func TestIdentifyDoesNotResolveSubcommandsWithoutRemainingArgs(t *testing.T) {
+	described := false
+	failing := &executableCommand{
+		name:       "plain",
+		discoverer: &discoverer{},
+		cache:      nullCache{},
+		describe: func(cmd *executableCommand) (*commandDescriptor, error) {
+			described = true
+			return nil, errors.New("plain: error: unknown flag --help-opencli")
+		},
+	}
+
+	help := &builtinCommand{definition: &EmbeddedCommand{Name: `help`}}
+	complete := &builtinCommand{definition: &EmbeddedCommand{Name: `complete`}}
+	entrypoint := &Entrypoint{cmds: Commands{help, complete, failing}}
+
+	// No remaining args: subcommands must not be resolved.
+	cmd, rest, err := entrypoint.Identify([]string{"plain"})
+	assert.NoError(t, err)
+	assert.Equal(t, failing, cmd)
+	assert.Equal(t, []string{}, rest)
+	assert.False(t, described, "should not have attempted to describe the command")
+
+	// With a remaining positional arg, subcommands are resolved to look for a
+	// match — confirming the short-circuit is specific to the empty-rest case.
+	described = false
+	_, _, err = entrypoint.Identify([]string{"plain", "sub"})
+	assert.Error(t, err)
+	assert.True(t, described, "should have attempted to describe the command")
 }
 
 func TestIdentify(t *testing.T) {
