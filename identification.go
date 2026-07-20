@@ -66,6 +66,11 @@ func identify(cmd Command, args []string) (Command, []string, error) {
 			return def, args, nil
 		}
 		return nullCommand{parent: cmd, name: name}, rest, nil
+	} else if len(rest) == 0 {
+		// With no remaining args, there is nothing to descend into, so we don't
+		// resolve found's subcommands. This lets callers like `which` identify
+		// a command even when it doesn't fulfill a discovery contract.
+		return found, rest, nil
 	} else if subcmds, err := found.Subcommands(); err != nil {
 		return found, rest, err
 	} else if len(subcmds) > 0 {
