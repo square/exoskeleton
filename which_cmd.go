@@ -25,33 +25,47 @@ EXAMPLES
 
 // WhichExec implements the 'which' command.
 func WhichExec(e *Entrypoint, args, _ []string) error {
-	if cmd, _, err := e.Identify(args); err != nil {
+	identifyArgs, willResolveSymlinks := splitWhichArgs(args)
+
+	cmd, _, err := e.Identify(identifyArgs)
+	if err != nil {
 		return err
 	} else if IsNull(cmd) {
 		return exit.ErrUnknownSubcommand
-	} else {
-		willResolveSymlinks := false
-
-		for _, arg := range args {
-			if arg == "--" {
-				break
-			} else if arg == "--follow-symlinks" || arg == "-s" {
-				willResolveSymlinks = true
-			}
-		}
-
-		path := cmd.Path()
-		if willResolveSymlinks {
-			resolvedPath, err := filepath.EvalSymlinks(path)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "ERROR: Unable to follow symlinks in %s\n", path)
-				return err
-			} else {
-				path = resolvedPath
-			}
-		}
-
-		fmt.Println(path)
-		return nil
 	}
+
+	path := cmd.Path()
+	if willResolveSymlinks {
+		resolvedPath, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: Unable to follow symlinks in %s\n", path)
+			return err
+		}
+		path = resolvedPath
+	}
+
+	fmt.Println(path)
+	return nil
+}
+
+// splitWhichArgs separates which's own --follow-symlinks/-s flags from the
+// arguments that identify the command. The flags are consumed here rather than
+// forwarded to Identify: left in, a flag becomes a trailing argument and causes
+// Identify to resolve the command's default subcommand instead of the command
+// itself. Everything after a `--` terminator is left untouched for the command.
+func splitWhichArgs(args []string) (identifyArgs []string, followSymlinks bool) {
+	identifyArgs = make([]string, 0, len(args))
+
+	for i, arg := range args {
+		if arg == "--" {
+			identifyArgs = append(identifyArgs, args[i:]...)
+			break
+		} else if arg == "--follow-symlinks" || arg == "-s" {
+			followSymlinks = true
+		} else {
+			identifyArgs = append(identifyArgs, arg)
+		}
+	}
+
+	return identifyArgs, followSymlinks
 }
