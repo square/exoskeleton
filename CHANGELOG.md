@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [unreleased]
+## [2.5.1](https://github.com/square/exoskeleton/compare/v2.5.0..v2.5.1)&nbsp;&nbsp;·&nbsp;&nbsp;2026-07-20
 
 - **fix:** Skip resolving `Subcommands()` if there are no more arguments to identify (#59)&nbsp;&nbsp;·&nbsp;&nbsp;[072ec7f](https://github.com/square/exoskeleton/commit/072ec7fbcc8365ffc3c05a9223494f20e9968a08)
 - **fix:** Stop passing `which`'s own flags to `Identify()` (#60)&nbsp;&nbsp;·&nbsp;&nbsp;[7927f67](https://github.com/square/exoskeleton/commit/7927f67eb22626763e470274792cd5dfb2e6c580)
