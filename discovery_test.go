@@ -112,6 +112,35 @@ func TestDiscoverInWithMaxDepth(t *testing.T) {
 	}
 }
 
+func TestDiscoverInSkipsModuleMetadataFiles(t *testing.T) {
+	// A module's metadata file describes the module; it is not a command.
+	// Packages sometimes ship the file with the executable bit set, which
+	// would otherwise match a contract and get probed as a command.
+	dir := t.TempDir()
+	module := filepath.Join(dir, "mymod")
+	assert.NoError(t, os.Mkdir(module, 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(module, ".exoskeleton"), []byte("# SUMMARY: my module\n"), 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(module, "hello"), []byte("#!/bin/sh\n# SUMMARY: says hello\n"), 0755))
+
+	d := discoverer{
+		maxDepth:               -1,
+		executor:               defaultExecutor,
+		contracts:              defaultContracts(),
+		moduleMetadataFilename: ".exoskeleton",
+	}
+	cmds, errs := d.DiscoverIn(dir, nil)
+	assert.Empty(t, errs)
+
+	all, flattenErrs := cmds.Flatten()
+	assert.Empty(t, flattenErrs)
+
+	var names []string
+	for _, cmd := range all {
+		names = append(names, Usage(cmd))
+	}
+	assert.Equal(t, []string{"mymod", "mymod hello"}, names)
+}
+
 func TestDiscovererBuildsCommand(t *testing.T) {
 	var parent Command = &builtinCommand{}
 

@@ -8,11 +8,12 @@ import (
 )
 
 type discoverer struct {
-	maxDepth  int
-	onError   func(error)
-	executor  ExecutorFunc
-	contracts []Contract
-	cache     Cache
+	maxDepth               int
+	onError                func(error)
+	executor               ExecutorFunc
+	contracts              []Contract
+	cache                  Cache
+	moduleMetadataFilename string
 }
 
 type DiscoveryContext interface {
@@ -25,11 +26,12 @@ type DiscoveryContext interface {
 
 func (d *discoverer) Next() DiscoveryContext {
 	return &discoverer{
-		maxDepth:  d.MaxDepth() - 1,
-		onError:   d.onError,
-		executor:  d.executor,
-		contracts: d.contracts,
-		cache:     d.cache,
+		maxDepth:               d.MaxDepth() - 1,
+		onError:                d.onError,
+		executor:               d.executor,
+		contracts:              d.contracts,
+		cache:                  d.cache,
+		moduleMetadataFilename: d.moduleMetadataFilename,
 	}
 }
 
@@ -38,11 +40,12 @@ var _ DiscoveryContext = &discoverer{}
 func (e *Entrypoint) discoverIn(paths []string) Commands {
 	all := Commands{}
 	d := &discoverer{
-		onError:   e.onError,
-		executor:  e.executor,
-		maxDepth:  e.maxDepth,
-		contracts: e.contracts,
-		cache:     e.cache,
+		onError:                e.onError,
+		executor:               e.executor,
+		maxDepth:               e.maxDepth,
+		contracts:              e.contracts,
+		cache:                  e.cache,
+		moduleMetadataFilename: e.moduleMetadataFilename,
 	}
 	for _, path := range paths {
 		cmds, _ := d.DiscoverIn(path, e)
@@ -75,6 +78,12 @@ func (d *discoverer) DiscoverIn(path string, parent Command) (Commands, []error)
 	}
 
 	for _, file := range files {
+		// The metadata file describes a module; it is never itself a command,
+		// even if it is executable.
+		if d.moduleMetadataFilename != "" && file.Name() == d.moduleMetadataFilename {
+			continue
+		}
+
 		if cmd, err := d.buildCommand(path, parent, file); err != nil {
 			if d.onError != nil {
 				d.onError(err)
