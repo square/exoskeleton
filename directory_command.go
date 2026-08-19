@@ -32,6 +32,15 @@ func (m *directoryCommand) Help() (string, error) {
 
 func (m *directoryCommand) DefaultSubcommand() Command { return nil }
 
+// HasSubcommands returns true if the directory has subcommands or —
+// when discovery has not been performed — may have subcommands.
+func (m *directoryCommand) HasSubcommands() bool {
+	if m.cmds != nil {
+		return len(m.cmds) > 0
+	}
+	return true
+}
+
 func (m *directoryCommand) Subcommands() (Commands, error) {
 	if m.cmds == nil && m.discoverer != nil {
 		m.cmds, _ = m.discoverer.DiscoverIn(filepath.Dir(m.path), m)

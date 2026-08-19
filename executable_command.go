@@ -119,6 +119,15 @@ func (cmd *executableCommand) DefaultSubcommand() Command {
 	return nil
 }
 
+// HasSubcommands returns true if the command has subcommands or —
+// when discovery has not been performed — may have subcommands.
+func (cmd *executableCommand) HasSubcommands() bool {
+	if cmd.cmds != nil {
+		return len(cmd.cmds) > 0
+	}
+	return cmd.discoverer != nil
+}
+
 // Subcommands returns the list of subcommands for this command.
 // Returns an empty slice for leaf commands.
 func (cmd *executableCommand) Subcommands() (Commands, error) {
