@@ -82,7 +82,7 @@ func (cmd *executableCommand) Complete(_ *Entrypoint, args, env []string) ([]str
 // The executable is expected to write the summary to standard output and exit
 // successfully.
 func (cmd *executableCommand) Summary() (string, error) {
-	if cmd.discoverer != nil && cmd.cmds == nil {
+	if cmd.summary == nil && cmd.discoverer != nil && cmd.cmds == nil {
 		if err := cmd.discover(); err != nil {
 			return "", err
 		}
@@ -184,7 +184,7 @@ func (cmd *executableCommand) discover() error {
 	cmd.summary = descriptor.Summary
 	cmd.defaultSubcommand = descriptor.DefaultCommand
 	cmd.openCLI = descriptor.openCLI
-	cmd.cmds = toCommands(cmd, descriptor.Commands, nil, cmd.discoverer)
+	cmd.cmds = toCommands(cmd, descriptor.Commands, cmd.args, cmd.discoverer)
 	return nil
 }
 
@@ -195,7 +195,9 @@ func (cmd *executableCommand) discover() error {
 // The returned Command describes only this node. Its Commands field is not
 // populated; walk Subcommands() to describe the command tree.
 func (cmd *executableCommand) OpenCLICommand() (*opencli.Command, error) {
-	if cmd.openCLI == nil && cmd.discoverer != nil && cmd.cmds == nil {
+	// Discover before answering: a command that describes its own subcommands
+	// provides a richer self-description than its entry in its parent's document.
+	if cmd.discoverer != nil && cmd.cmds == nil {
 		if err := cmd.discover(); err != nil {
 			return nil, err
 		}
@@ -210,11 +212,14 @@ func (cmd *executableCommand) OpenCLICommand() (*opencli.Command, error) {
 func toCommands(parent *executableCommand, descriptors []*commandDescriptor, args []string, d DiscoveryContext) Commands {
 	cmds := Commands{}
 	for _, descriptor := range descriptors {
+		// Allocate exactly, so that sibling commands never share a backing array.
+		cmdArgs := append(append(make([]string, 0, len(args)+1), args...), descriptor.Name)
+
 		c := &executableCommand{
 			parent:            parent,
 			discoveredIn:      parent.discoveredIn,
 			path:              parent.path,
-			args:              append(args, descriptor.Name),
+			args:              cmdArgs,
 			name:              descriptor.Name,
 			aliases:           descriptor.Aliases,
 			summary:           descriptor.Summary,
@@ -225,9 +230,16 @@ func toCommands(parent *executableCommand, descriptors []*commandDescriptor, arg
 			contract:          parent.contract,
 		}
 
-		if len(descriptor.Commands) > 0 && d.MaxDepth() != 0 {
-			c.discoverer = d.Next()
-			c.cmds = toCommands(c, descriptor.Commands, append(args, c.name), d.Next())
+		if d.MaxDepth() != 0 {
+			if len(descriptor.Commands) > 0 {
+				c.discoverer = d.Next()
+				c.cmds = toCommands(c, descriptor.Commands, cmdArgs, d.Next())
+			} else if descriptor.describedBy != nil {
+				// The command can describe its own subcommands: defer
+				// discovery until Subcommands() is called.
+				c.discoverer = d.Next()
+				c.describe = descriptor.describedBy
+			}
 		}
 		cmds = append(cmds, c)
 	}

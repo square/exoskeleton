@@ -16,6 +16,11 @@ import (
 //
 // Unlike ExecutableContract, this contract does not require any particular
 // file extension. Any executable file is eligible.
+//
+// A document may describe its subcommands progressively: when a subcommand's
+// entry lists no children but declares the option "--help-opencli", its
+// subcommands are discovered on demand by invoking the subcommand with
+// --help-opencli (e.g. `tool sub --help-opencli`).
 type OpenCLIContract struct{}
 
 // OpenCLIDescriber is implemented by Commands that can describe themselves
@@ -78,7 +83,10 @@ func (c *OpenCLIContract) BuildCommand(path string, info fs.DirEntry, parent Com
 // describeOpenCLI is a describeFunc that invokes --help-opencli
 // and parses the OpenCLI JSON output into a commandDescriptor.
 func describeOpenCLI(cmd *executableCommand) (*commandDescriptor, error) {
-	out, err := cmd.cache.Fetch(cmd, "help-opencli", func() (string, error) {
+	// Subcommands that respond to --help-opencli themselves share the
+	// executable's path, so the cache key must include their arguments.
+	key := strings.Join(append([]string{"help-opencli"}, cmd.args...), " ")
+	out, err := cmd.cache.Fetch(cmd, key, func() (string, error) {
 		return helpOpenCLIRaw(cmd)
 	})
 	if err != nil {
@@ -150,6 +158,19 @@ func opencliToDescriptor(cmd opencli.Command) *commandDescriptor {
 		for i, sub := range cmd.Commands {
 			d.Commands[i] = opencliToDescriptor(sub)
 		}
+	} else if respondsToHelpOpenCLI(cmd) {
+		d.describedBy = describeOpenCLI
 	}
 	return d
+}
+
+// respondsToHelpOpenCLI returns true if the command declares --help-opencli
+// among its options, signaling that it can describe its own subcommands.
+func respondsToHelpOpenCLI(cmd opencli.Command) bool {
+	for _, o := range cmd.Options {
+		if o.Name == "--help-opencli" {
+			return true
+		}
+	}
+	return false
 }

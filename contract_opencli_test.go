@@ -3,6 +3,7 @@ package exoskeleton
 import (
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -88,10 +89,11 @@ func TestOpenCLICommandDiscovery(t *testing.T) {
 	// Subcommands are discovered from OpenCLI output
 	cmds, err := cmd.Subcommands()
 	assert.NoError(t, err)
-	assert.Len(t, cmds, 3)
+	assert.Len(t, cmds, 4)
 	assert.Equal(t, "build", cmds[0].Name())
 	assert.Equal(t, "mod", cmds[1].Name())
 	assert.Equal(t, "hidden-cmd", cmds[2].Name())
+	assert.Equal(t, "google-drive", cmds[3].Name())
 
 	// Nested subcommands
 	modCmds, err := cmds[1].Subcommands()
@@ -145,6 +147,82 @@ func TestOpenCLICommandExposesMetadata(t *testing.T) {
 	assert.Len(t, node.Arguments, 1)
 	assert.Equal(t, "file", node.Arguments[0].Name)
 	assert.Empty(t, node.Commands)
+}
+
+// buildOpenCLITool builds a Command from the opencli-tool fixture.
+func buildOpenCLITool(t *testing.T, d *discoverer) Command {
+	t.Helper()
+	path := filepath.Join(fixtures, "opencli-tool")
+	info, err := os.Lstat(path)
+	assert.NoError(t, err)
+	cmd, err := (&OpenCLIContract{}).BuildCommand(path, fs.FileInfoToDirEntry(info), nil, d)
+	assert.NoError(t, err)
+	return cmd
+}
+
+func TestOpenCLIProgressiveDiscovery(t *testing.T) {
+	execs := 0
+	countingExecutor := func(c *exec.Cmd) error { execs++; return c.Run() }
+	cmd := buildOpenCLITool(t, &discoverer{maxDepth: -1, executor: countingExecutor})
+
+	cmds, err := cmd.Subcommands()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, execs)
+
+	// The root document lists no subcommands for google-drive but declares
+	// that it responds to --help-opencli. Its sigil and summary come from
+	// the root document without executing anything...
+	gd := cmds.Find("google-drive")
+	assert.True(t, HasSubcommands(gd))
+	summary, err := gd.Summary()
+	assert.NoError(t, err)
+	assert.Equal(t, "Work with Google Drive", summary)
+	assert.Equal(t, 1, execs)
+
+	// ...and Subcommands() invokes `opencli-tool google-drive --help-opencli`.
+	gdCmds, err := gd.Subcommands()
+	assert.NoError(t, err)
+	assert.Equal(t, 2, execs)
+	assert.Len(t, gdCmds, 2)
+
+	// Descendants are invoked with the full path of arguments.
+	docs := gdCmds[0].(*executableCommand)
+	assert.Equal(t, []string{cmd.Path(), "google-drive", "docs"}, docs.Command().Args)
+
+	// OpenCLICommand() returns google-drive's own description of itself,
+	// which is richer than its entry in the root document.
+	node, err := gd.(OpenCLIDescriber).OpenCLICommand()
+	assert.NoError(t, err)
+	assert.Equal(t, "Work with files in Google Drive", *node.Description)
+}
+
+func TestOpenCLIProgressiveDiscoveryRespectsMaxDepth(t *testing.T) {
+	cmd := buildOpenCLITool(t, &discoverer{maxDepth: 1, executor: defaultExecutor})
+
+	cmds, err := cmd.Subcommands()
+	assert.NoError(t, err)
+
+	gdCmds, err := cmds.Find("google-drive").Subcommands()
+	assert.NoError(t, err)
+	assert.Empty(t, gdCmds)
+}
+
+func TestOpenCLIProgressiveDiscoveryCacheKeysDoNotCollide(t *testing.T) {
+	cachePath := filepath.Join(t.TempDir(), "cache.json")
+
+	subcommandsOfGoogleDrive := func() Commands {
+		cmd := buildOpenCLITool(t, &discoverer{maxDepth: -1, executor: defaultExecutor, cache: &FileCache{Path: cachePath}})
+		cmds, err := cmd.Subcommands()
+		assert.NoError(t, err)
+		gdCmds, err := cmds.Find("google-drive").Subcommands()
+		assert.NoError(t, err)
+		return gdCmds
+	}
+
+	// The second call reads google-drive's document from the cache; a key
+	// collision would return the root document instead.
+	assert.Len(t, subcommandsOfGoogleDrive(), 2)
+	assert.Len(t, subcommandsOfGoogleDrive(), 2)
 }
 
 func TestOpenCLICommandForNonOpenCLIContract(t *testing.T) {

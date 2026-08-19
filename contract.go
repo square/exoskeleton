@@ -194,6 +194,11 @@ type commandDescriptor struct {
 	// is not populated; children are represented by Commands above. It is nil for
 	// commands discovered via contracts other than OpenCLI.
 	openCLI *opencli.Command
+
+	// describedBy, when set, indicates that the command can describe its own
+	// subcommands (e.g. by responding to --help-opencli) even though Commands
+	// is empty. toCommands uses it to defer discovery to the command itself.
+	describedBy describeFunc
 }
 
 func readSummaryFromShellScript(cmd *shellScriptCommand) (string, error) {
