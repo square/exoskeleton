@@ -24,7 +24,7 @@ func (e *Entrypoint) Identify(args []string) (Command, []string, error) {
 
 	// Recognize `--help` and `-h` as aliases for the built-in `help` command
 	// only when they immediately follow an identifiable command.
-	if !IsNull(cmd) && len(rest) > 0 && (rest[0] == "--help" || rest[0] == "-h") {
+	if !IsNull(cmd) && len(rest) > 0 && isHelpFlag(rest[0]) {
 		return e.Identify(append(append([]string{"help"}, argsRelativeTo(cmd, e)...), rest[1:]...))
 	}
 
@@ -44,7 +44,7 @@ func (e *Entrypoint) Identify(args []string) (Command, []string, error) {
 // for providing its subcommands.
 func identify(cmd Command, args []string) (Command, []string, error) {
 	if len(args) == 0 || isFlag(args[0]) {
-		if len(args) > 0 {
+		if len(args) > 0 && !isHelpFlag(args[0]) {
 			if def := cmd.DefaultSubcommand(); def != nil {
 				return def, args, nil
 			}
@@ -82,6 +82,10 @@ func identify(cmd Command, args []string) (Command, []string, error) {
 
 func isFlag(s string) bool {
 	return strings.HasPrefix(s, "-")
+}
+
+func isHelpFlag(s string) bool {
+	return s == "--help" || s == "-h"
 }
 
 func without(slice []string, exception string) (result []string) {

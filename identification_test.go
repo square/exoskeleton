@@ -80,6 +80,36 @@ func TestIdentifyDoesNotResolveSubcommandsWithoutRemainingArgs(t *testing.T) {
 	assert.True(t, described, "should have attempted to describe the command")
 }
 
+func TestHelpTargetsModuleInsteadOfDefaultSubcommand(t *testing.T) {
+	help := &builtinCommand{definition: &EmbeddedCommand{Name: "help"}}
+	owners := &builtinCommand{definition: &EmbeddedCommand{Name: "owners", DefaultCommand: "fetch"}}
+	fetch := &builtinCommand{parent: owners, definition: &EmbeddedCommand{Name: "fetch", Summary: "Fetch ownership data"}}
+	local := &builtinCommand{parent: owners, definition: &EmbeddedCommand{Name: "local", Summary: "Resolve local ownership data"}}
+	owners.subcommands = Commands{fetch, local}
+	entrypoint := &Entrypoint{name: "sq", cmds: Commands{help, owners}}
+
+	for _, flag := range []string{"--help", "-h"} {
+		t.Run(flag, func(t *testing.T) {
+			cmd, rest, err := entrypoint.Identify([]string{"owners", flag})
+			assert.NoError(t, err)
+			assert.Equal(t, help, cmd)
+			assert.Equal(t, []string{"owners"}, rest)
+
+			target, _, err := entrypoint.Identify(rest)
+			assert.NoError(t, err)
+			menu, err := entrypoint.helpFor(target, nil)
+			assert.NoError(t, err)
+			assert.Contains(t, menu, "fetch")
+			assert.Contains(t, menu, "local")
+		})
+	}
+
+	cmd, rest, err := entrypoint.Identify([]string{"owners", "squareup/example"})
+	assert.NoError(t, err)
+	assert.Equal(t, fetch, cmd)
+	assert.Equal(t, []string{"squareup/example"}, rest)
+}
+
 func TestIdentify(t *testing.T) {
 	// all
 	// ├── a
