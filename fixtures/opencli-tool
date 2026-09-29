@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 # SUMMARY: An OpenCLI tool
 
+if [[ "$1" == "google-drive" && "$2" == "--help-opencli" ]]; then
+  cat << EOF
+{
+  "opencli": "0.1-block.1",
+  "name": "google-drive",
+  "info": {"version": "1.0.0"},
+  "summary": "Work with Google Drive",
+  "description": "Work with files in Google Drive",
+  "commands": [
+    {
+      "name": "docs",
+      "summary": "Work with Google Docs"
+    },
+    {
+      "name": "sheets",
+      "summary": "Work with Google Sheets"
+    }
+  ]
+}
+EOF
+  exit 0
+fi
+
 if [[ "$1" == "--help-opencli" ]]; then
   cat << EOF
 {
@@ -38,6 +61,13 @@ if [[ "$1" == "--help-opencli" ]]; then
       ],
       "arguments": [
         {"name": "file"}
+      ]
+    },
+    {
+      "name": "google-drive",
+      "summary": "Work with Google Drive",
+      "options": [
+        {"name": "--help-opencli", "hidden": true}
       ]
     }
   ]

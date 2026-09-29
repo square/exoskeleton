@@ -121,6 +121,26 @@ func TestExpand(t *testing.T) {
 	}
 }
 
+func TestToCommandsThreadsArgsToDeepDescendants(t *testing.T) {
+	descriptors := []*commandDescriptor{
+		{Name: "a", Commands: []*commandDescriptor{
+			{Name: "b", Commands: []*commandDescriptor{
+				{Name: "c", Commands: []*commandDescriptor{
+					{Name: "d1"},
+					{Name: "d2"},
+				}},
+			}},
+		}},
+	}
+	parent := &executableCommand{path: "/tool", name: "tool"}
+
+	cmds := toCommands(parent, descriptors, nil, &discoverer{maxDepth: -1})
+
+	c := cmds.Find("a").(*executableCommand).cmds.Find("b").(*executableCommand).cmds.Find("c").(*executableCommand)
+	assert.Equal(t, []string{"a", "b", "c", "d1"}, c.cmds.Find("d1").(*executableCommand).args)
+	assert.Equal(t, []string{"a", "b", "c", "d2"}, c.cmds.Find("d2").(*executableCommand).args)
+}
+
 func TestExpandWithDepthZeroDoesNotCallSubcommands(t *testing.T) {
 	stub := &stubParent{name: "stub"}
 
