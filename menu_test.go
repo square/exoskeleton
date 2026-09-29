@@ -32,6 +32,17 @@ func TestMenuForTrailer(t *testing.T) {
 	assert.Contains(t, menu, "Run \033[96mentrypoint help module <command>\033[0m to print information on a specific command.")
 }
 
+func TestBuildMenuRendersSigilWithoutDiscoveringSubcommands(t *testing.T) {
+	entrypoint := &Entrypoint{name: "entrypoint"}
+	stub := &stubParent{name: "stub", parent: entrypoint}
+	entrypoint.cmds = Commands{stub}
+
+	menu, errs := buildMenu(entrypoint, &MenuOptions{})
+	assert.Empty(t, errs)
+	assert.Equal(t, "stub:", menu.Sections[0].MenuItems[0].Name)
+	assert.False(t, stub.subcommandsCalled, "buildMenu should not discover subcommands to render the sigil")
+}
+
 func TestMenuForSections(t *testing.T) {
 	entrypoint, err := New([]string{fixtures})
 	if err != nil {

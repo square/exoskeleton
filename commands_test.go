@@ -121,6 +121,15 @@ func TestExpand(t *testing.T) {
 	}
 }
 
+func TestExpandWithDepthZeroDoesNotCallSubcommands(t *testing.T) {
+	stub := &stubParent{name: "stub"}
+
+	cmds, errs := Commands{stub}.Expand(WithDepth(0))
+	assert.Empty(t, errs)
+	assert.Equal(t, Commands{stub}, cmds)
+	assert.False(t, stub.subcommandsCalled, "Expand should not call Subcommands() when depth is 0")
+}
+
 func namesOf(cmds Commands) string {
 	var result []string
 	for _, cmd := range cmds {

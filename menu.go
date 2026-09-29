@@ -123,7 +123,7 @@ func buildMenu(cmd Command, opts *MenuOptions) (*Menu, []error) {
 	allItems, ferrs :=
 		parallelMap(c, func(subcmd Command) ([]*MenuItem, []error) {
 			name := UsageRelativeTo(subcmd, cmd)
-			if subcmds, _ := subcmd.Subcommands(); len(subcmds) > 0 {
+			if HasSubcommands(subcmd) {
 				name += ":"
 			}
 
