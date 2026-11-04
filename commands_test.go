@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/block/opencli-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -119,6 +120,18 @@ func TestExpand(t *testing.T) {
 		assert.Empty(t, errs)
 		assert.Equal(t, namesOf(s.expected), namesOf(cmds), "Expand[%d]", i)
 	}
+}
+
+func TestExpandWithoutHidden(t *testing.T) {
+	a := &executableCommand{name: "a"}
+	b := &executableCommand{name: "b", openCLI: &opencli.Command{Hidden: true}, discoverer: &discoverer{}}
+	c := &executableCommand{parent: b, name: "c"}
+	b.cmds = Commands{c}
+	given := Commands{a, b}
+
+	cmds, errs := given.Expand(WithoutHidden())
+	assert.Empty(t, errs)
+	assert.Equal(t, namesOf(Commands{a}), namesOf(cmds))
 }
 
 func namesOf(cmds Commands) string {
