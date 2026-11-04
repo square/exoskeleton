@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [unreleased]
+
+- **feat** [**breaking**]**:** Add `Hidden()` to `Command` and omit hidden commands from menus, completions, and suggestions (#69)&nbsp;&nbsp;·&nbsp;&nbsp;[ad883e9](https://github.com/square/exoskeleton/commit/ad883e98a39589474c448c7c2b14a3a8e6afbbd7)
+
 ## [2.5.1](https://github.com/square/exoskeleton/compare/v2.5.0..v2.5.1)&nbsp;&nbsp;·&nbsp;&nbsp;2026-07-20
 
 - **fix:** Skip resolving `Subcommands()` if there are no more arguments to identify (#59)&nbsp;&nbsp;·&nbsp;&nbsp;[072ec7f](https://github.com/square/exoskeleton/commit/072ec7fbcc8365ffc3c05a9223494f20e9968a08)
