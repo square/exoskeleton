@@ -198,6 +198,12 @@ func (cmd *executableCommand) OpenCLICommand() (*opencli.Command, error) {
 	return &node, nil
 }
 
+// Hidden returns true if the command's OpenCLI metadata marks it hidden.
+func (cmd *executableCommand) Hidden() bool {
+	c, err := cmd.OpenCLICommand()
+	return err == nil && c != nil && c.Hidden
+}
+
 func toCommands(parent *executableCommand, descriptors []*commandDescriptor, args []string, d DiscoveryContext) Commands {
 	cmds := Commands{}
 	for _, descriptor := range descriptors {

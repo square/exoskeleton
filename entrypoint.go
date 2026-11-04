@@ -55,6 +55,7 @@ func (e *Entrypoint) Parent() Command                { return nil }
 func (e *Entrypoint) Path() string                   { return e.path }
 func (e *Entrypoint) Name() string                   { return e.name }
 func (e *Entrypoint) Aliases() []string              { return nil }
+func (e *Entrypoint) Hidden() bool                   { return false }
 func (e *Entrypoint) Summary() (string, error)       { panic("Unused") }
 func (e *Entrypoint) Help() (string, error)          { panic("Unused") }
 func (e *Entrypoint) DefaultSubcommand() Command     { return nil }

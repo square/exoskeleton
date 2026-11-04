@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/block/opencli-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -97,6 +98,21 @@ func TestMenuForSections(t *testing.T) {
 		menu, errs := MenuFor(entrypoint, &MenuOptions{Depth: s.depth})
 		assert.Empty(t, errs)
 		assert.Equal(t, s.expected, sections(nocolor(menu)), "Given depth=%d", s.depth)
+	}
+}
+
+func TestMenuForOmitsHiddenCommands(t *testing.T) {
+	summary := "a summary"
+	entrypoint := &Entrypoint{name: "entrypoint"}
+	visible := &executableCommand{parent: entrypoint, name: "visible", summary: &summary}
+	hidden := &executableCommand{parent: entrypoint, name: "hidden", summary: &summary, openCLI: &opencli.Command{Hidden: true}, discoverer: &discoverer{}}
+	hidden.cmds = Commands{&executableCommand{parent: hidden, name: "child", summary: &summary}}
+	entrypoint.cmds = Commands{visible, hidden}
+
+	for _, depth := range []int{0, -1} {
+		menu, errs := MenuFor(entrypoint, &MenuOptions{Depth: depth})
+		assert.Empty(t, errs)
+		assert.Equal(t, "COMMANDS\n   visible  a summary", sections(nocolor(menu)), "Given depth=%d", depth)
 	}
 }
 

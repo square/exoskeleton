@@ -118,7 +118,7 @@ func buildMenu(cmd Command, opts *MenuOptions) (*Menu, []error) {
 		return &Menu{}, []error{err}
 	}
 
-	c, errs := c.Expand(WithDepth(opts.Depth), WithoutExpandedModules())
+	c, errs := c.Expand(WithDepth(opts.Depth), WithoutExpandedModules(), WithoutHidden())
 
 	allItems, ferrs :=
 		parallelMap(c, func(subcmd Command) ([]*MenuItem, []error) {

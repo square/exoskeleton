@@ -60,7 +60,7 @@ func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, 
 		for _, subcmd := range c {
 			name := subcmd.Name()
 
-			if seen[name] {
+			if seen[name] || subcmd.Hidden() {
 				continue
 			}
 			seen[name] = true

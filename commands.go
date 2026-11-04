@@ -39,7 +39,7 @@ func (c Commands) Expand(fops ...ExpandOption) (Commands, []error) {
 	for _, fop := range fops {
 		fop(o)
 	}
-	return expand(c, o.depth, o.includeExpandedModules)
+	return o.expand(c, o.depth)
 }
 
 type ExpandOption func(*expandOptions)
@@ -47,6 +47,7 @@ type ExpandOption func(*expandOptions)
 type expandOptions struct {
 	depth                  int
 	includeExpandedModules bool
+	excludeHidden          bool
 }
 
 func WithDepth(d int) ExpandOption {
@@ -57,18 +58,27 @@ func WithoutExpandedModules() ExpandOption {
 	return func(o *expandOptions) { o.includeExpandedModules = false }
 }
 
-func expand(c Commands, depth int, includeExpandedModules bool) (Commands, []error) {
+// WithoutHidden omits hidden commands and their descendants.
+func WithoutHidden() ExpandOption {
+	return func(o *expandOptions) { o.excludeHidden = true }
+}
+
+func (o *expandOptions) expand(c Commands, depth int) (Commands, []error) {
 	return parallelMap(c, func(cmd Command) ([]Command, []error) {
+		if o.excludeHidden && cmd.Hidden() {
+			return nil, nil
+		}
+
 		// If this command has subcommands, recursively flatten them...
 		if subcmds, err := cmd.Subcommands(); err == nil && len(subcmds) > 0 && depth != 0 {
 			cmds := []Command{}
 			errs := []error{}
 
-			if includeExpandedModules {
+			if o.includeExpandedModules {
 				cmds = append(cmds, cmd)
 			}
 
-			fcmds, ferrs := expand(subcmds, depth-1, includeExpandedModules)
+			fcmds, ferrs := o.expand(subcmds, depth-1)
 			cmds = append(cmds, fcmds...)
 			errs = append(errs, ferrs...)
 

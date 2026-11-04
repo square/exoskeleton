@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/block/opencli-go"
 	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 	"github.com/stretchr/testify/assert"
 )
@@ -53,6 +54,19 @@ func TestCompletionsFor(t *testing.T) {
 		actualCompletions, _, _ := entrypoint.completionsFor(s.args, nil, s.completeArgs)
 		assert.Equal(t, s.expectedCompletions, actualCompletions, fmt.Sprintf("completionsFor(\"%v\", %t)", s.args, s.completeArgs))
 	}
+}
+
+func TestCompletionsForOmitsHiddenCommands(t *testing.T) {
+	entrypoint := &Entrypoint{}
+	visible := &executableCommand{parent: entrypoint, name: "visible"}
+	hidden := &executableCommand{parent: entrypoint, name: "hidden", openCLI: &opencli.Command{Hidden: true}}
+	entrypoint.cmds = Commands{visible, hidden}
+
+	completions, _, _ := entrypoint.completionsFor([]string{""}, nil, true)
+	assert.Equal(t, []string{"visible"}, completions)
+
+	completions, _, _ = entrypoint.completionsFor([]string{"hid"}, nil, true)
+	assert.Empty(t, completions)
 }
 
 func echoArgs(_ *Entrypoint, args, _ []string) ([]string, shellcomp.Directive, error) {

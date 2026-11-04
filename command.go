@@ -39,6 +39,10 @@ type Command interface {
 	// Returns nil for commands without aliases.
 	Aliases() []string
 
+	// Hidden returns true if the command asks not to be listed in menus,
+	// completions, or suggestions. Hidden commands can still be identified and run.
+	Hidden() bool
+
 	// Summary returns the (short!) description of the command to be displayed
 	// in menus.
 	//
