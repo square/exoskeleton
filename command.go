@@ -4,6 +4,19 @@ import (
 	"github.com/square/exoskeleton/v2/pkg/shellcomp"
 )
 
+// IsHidden reports whether a command or one of its parents is hidden from
+// help and completion. Commands may implement Hidden() bool to opt in without
+// changing the Command interface. Hidden commands remain callable by name.
+func IsHidden(cmd Command) bool {
+	for cmd != nil {
+		if visibility, ok := cmd.(interface{ Hidden() bool }); ok && visibility.Hidden() {
+			return true
+		}
+		cmd = cmd.Parent()
+	}
+	return false
+}
+
 // Command is a command in your CLI application.
 //
 // In the Go CLI, 'go test' and 'go mod tidy' are both commands. Exoskeleton would

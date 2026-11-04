@@ -16,6 +16,7 @@ type describeFunc func(cmd *executableCommand) (*commandDescriptor, error)
 
 // executableCommand implements the Command interface for a file that can be executed.
 type executableCommand struct {
+	hidden            bool
 	parent            Command
 	path              string
 	name              string
@@ -39,6 +40,7 @@ func (cmd *executableCommand) Name() string         { return cmd.name }
 func (cmd *executableCommand) Aliases() []string    { return cmd.aliases }
 func (cmd *executableCommand) DiscoveredIn() string { return cmd.discoveredIn }
 func (cmd *executableCommand) Contract() string     { return cmd.contract }
+func (cmd *executableCommand) Hidden() bool         { return cmd.hidden }
 
 // Command returns an exec.Cmd that will run the executable with the given arguments.
 func (cmd *executableCommand) Command(args ...string) *exec.Cmd {
@@ -173,6 +175,7 @@ func (cmd *executableCommand) discover() error {
 	}
 
 	cmd.summary = descriptor.Summary
+	cmd.hidden = descriptor.Hidden
 	cmd.defaultSubcommand = descriptor.DefaultCommand
 	cmd.openCLI = descriptor.openCLI
 	cmd.cmds = toCommands(cmd, descriptor.Commands, nil, cmd.discoverer)
@@ -202,6 +205,7 @@ func toCommands(parent *executableCommand, descriptors []*commandDescriptor, arg
 	cmds := Commands{}
 	for _, descriptor := range descriptors {
 		c := &executableCommand{
+			hidden:            descriptor.Hidden,
 			parent:            parent,
 			discoveredIn:      parent.discoveredIn,
 			path:              parent.path,

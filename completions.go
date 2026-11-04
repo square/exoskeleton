@@ -58,6 +58,9 @@ func (c Commands) completionsFor(args []string) ([]string, shellcomp.Directive, 
 		seen := make(map[string]bool)
 
 		for _, subcmd := range c {
+			if IsHidden(subcmd) {
+				continue
+			}
 			name := subcmd.Name()
 
 			if seen[name] {

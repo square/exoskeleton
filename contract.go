@@ -183,6 +183,7 @@ func describeCommandsDefault(cmd *executableCommand) (*commandDescriptor, error)
 }
 
 type commandDescriptor struct {
+	Hidden         bool                 `json:"hidden,omitempty"`
 	Name           string               `json:"name"`
 	Aliases        []string             `json:"aliases,omitempty"`
 	Summary        *string              `json:"summary,omitempty"`

@@ -122,6 +122,9 @@ func buildMenu(cmd Command, opts *MenuOptions) (*Menu, []error) {
 
 	allItems, ferrs :=
 		parallelMap(c, func(subcmd Command) ([]*MenuItem, []error) {
+			if IsHidden(subcmd) {
+				return nil, nil
+			}
 			name := UsageRelativeTo(subcmd, cmd)
 			if subcmds, _ := subcmd.Subcommands(); len(subcmds) > 0 {
 				name += ":"
