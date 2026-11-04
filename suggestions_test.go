@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/block/opencli-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,4 +36,14 @@ func TestSuggestionsFor(t *testing.T) {
 	for _, s := range scenarios {
 		assert.Equal(t, s.expectedSuggestions, entrypoint.suggestionsFor(s.typedName), fmt.Sprintf("SuggestionsFor(\"%s\")", s.typedName))
 	}
+}
+
+func TestSuggestionsForOmitsHiddenCommands(t *testing.T) {
+	entrypoint := &Entrypoint{name: "e"}
+	hidden := &executableCommand{parent: entrypoint, name: "hidden", openCLI: &opencli.Command{Hidden: true}, discoverer: &discoverer{}}
+	hidden.cmds = Commands{&executableCommand{parent: hidden, name: "child"}}
+	entrypoint.cmds = Commands{hidden}
+
+	assert.Empty(t, entrypoint.suggestionsFor("hidde"))
+	assert.Empty(t, entrypoint.suggestionsFor("child"))
 }

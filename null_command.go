@@ -15,6 +15,7 @@ func (n nullCommand) Parent() Command          { return n.parent }
 func (_ nullCommand) Path() string             { return "" }
 func (n nullCommand) Name() string             { return n.name }
 func (_ nullCommand) Aliases() []string        { return nil }
+func (_ nullCommand) Hidden() bool             { return false }
 func (_ nullCommand) Summary() (string, error) { panic("Unused") }
 func (_ nullCommand) Help() (string, error)    { panic("Unused") }
 
